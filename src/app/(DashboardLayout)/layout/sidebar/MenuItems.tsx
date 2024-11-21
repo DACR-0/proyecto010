@@ -27,7 +27,7 @@ const Menuitems = [
   },
   {
     navlabel: true,
-    subheader: "Programacion Academica",
+    subheader: "PROFESORES A PROGRAMAR",
   },
   {
     id: uniqueId(),
@@ -36,11 +36,28 @@ const Menuitems = [
     href: "/principal/profesores",
   },
   {
-    id: uniqueId(),
-    title: "Descargas Academicas",
-    icon: IconArrowBadgeRight,
-    href: "/principal/descargas",
+    navlabel: true,
+    subheader: "DESCARGAS ACADEMICAS",
   },
+  {
+    id: uniqueId(),
+    title: "FUNCIÓN ADMINISTRATIVA",
+    icon: IconArrowBadgeRight,
+    href: "/principal/descargas_admin",
+  },
+  {
+    id: uniqueId(),
+    title: "INVESTIGACION",
+    icon: IconArrowBadgeRight,
+    href: "/principal/descargas_inves",
+  },
+  {
+    id: uniqueId(),
+    title: "EXTENCION",
+    icon: IconArrowBadgeRight,
+    href: "/principal/descargas_exten",
+  },
+  
   {
     id: uniqueId(),
     title: "Crear-Editar Descarga",

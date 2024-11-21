@@ -180,5 +180,4 @@ const ECDescargasPage = () => {
     </PageContainer>
   );
 };
-
 export default ECDescargasPage;
