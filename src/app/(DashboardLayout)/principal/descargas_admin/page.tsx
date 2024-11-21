@@ -10,6 +10,7 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Grid, TextField, Button,
 } from '@mui/material';
 
 interface Descarga {
@@ -61,6 +62,18 @@ const DescargasAPage: React.FC = () => {
       >
         <center>DESCARGAS ACADÉMICAS</center>
       </Typography>
+      <Grid container style={{ marginTop: '16px', width:100 }}>
+      <Button
+        variant="contained"
+        component="label"
+        fullWidth
+        style={{ textTransform: 'none' }}
+      >
+        Agregar
+      </Button>
+      <br/>
+      </Grid>
+      
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
