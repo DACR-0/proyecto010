@@ -120,7 +120,7 @@ const DescargasAPage: React.FC = () => {
                       onClick={() => {
                         const link = document.createElement('a');
                         link.href = `data:application/octet-stream;base64,${descarga.soporte}`;
-                        link.download = `soporte_${index}.png`; // Cambia la extensión según el tipo de archivo esperado
+                        link.download = `soporte_${index}.pdf`; // Cambia la extensión según el tipo de archivo esperado
                         link.click();
                       }}
                     >

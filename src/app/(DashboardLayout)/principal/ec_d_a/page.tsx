@@ -20,8 +20,8 @@ const ECDescargasAPage = () => {
   const [rows, setRows] = useState<Row[]>([
     { id: 1, cargo: '', porcentaje: null, soporte: null },
   ]);
-  const [profesores, setProfesores] = useState<{ id: number; nombre: string }[]>([]);
-  const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>('');
+  const [profesores, setProfesores] = useState<{ id: number; nombre: string; numero_doc: string }[]>([]);
+  const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>(''); // Ahora guardará el numero_doc
   const [cargos, setCargos] = useState<Cargo[]>([]);
 
   // Cargar datos de la API de profesores
@@ -68,6 +68,60 @@ const ECDescargasAPage = () => {
     }
   };
 
+  // Validación de formulario
+  const isFormValid = () => {
+    // Verificar si todas las filas tienen un cargo y un archivo adjunto
+    return rows.every((row) => row.cargo && row.soporte);
+  };
+
+  // Función para finalizar
+  const handleFinalizar = async () => {
+    if (!isFormValid()) {
+      alert('Por favor, complete todos los campos antes de enviar el formulario.');
+      return; // No continuar si no es válido
+    }
+
+    const confirmar = window.confirm('¿Estás seguro de que deseas enviar el formulario?');
+
+    if (!confirmar) {
+      return; // Si el usuario cancela, no se realiza ninguna acción
+    }
+
+    try {
+      const data = {
+        profesor: profesorSeleccionado,
+        rows: rows.map((row) => ({
+          cargo: row.cargo,
+          porcentaje: row.porcentaje,
+          soporte: row.soporte,
+        })),
+        periodo: '2025-1', // Cambia este valor según corresponda
+      };
+
+      const response = await fetch('/api/d_admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al subir las descargas');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        alert('Descargas subidas exitosamente');
+
+        // Limpiar el formulario después de un envío exitoso
+        setProfesorSeleccionado(''); // Limpiar selección de profesor
+        setRows([{ id: 1, cargo: '', porcentaje: null, soporte: null }]); // Limpiar filas
+      }
+    } catch (error) {
+      console.error('Error al subir las descargas:', error);
+      alert('Hubo un problema al subir las descargas');
+    }
+  };
+
   return (
     <DashboardCard title="Editar y Crear Descargas Académicas">
       <Grid container spacing={3}>
@@ -81,10 +135,10 @@ const ECDescargasAPage = () => {
             label="Nombre y apellido profesor"
             variant="outlined"
             value={profesorSeleccionado}
-            onChange={(e) => setProfesorSeleccionado(e.target.value)}
+            onChange={(e) => setProfesorSeleccionado(e.target.value)} // Ahora guarda el numero_doc
           >
             {profesores.map((profesor) => (
-              <MenuItem key={profesor.id} value={profesor.nombre}>
+              <MenuItem key={profesor.id} value={profesor.numero_doc}>
                 {profesor.nombre}
               </MenuItem>
             ))}
@@ -110,19 +164,19 @@ const ECDescargasAPage = () => {
         </Grid>
 
         {/* Encabezados */}
-        <Grid container spacing={2} style={{ marginTop: '16px' }}>
+        <Grid container spacing={2} style={{ marginTop: '16px', marginBottom: '16px' }}>
           <Grid item xs={4}>
-            <Typography variant="subtitle1" align="center">
+            <Typography variant="h6" align="center">
               Cargos
             </Typography>
           </Grid>
           <Grid item xs={4}>
-            <Typography variant="subtitle1" align="center">
+            <Typography variant="h6" align="center">
               Porcentaje Descarga
             </Typography>
           </Grid>
           <Grid item xs={4}>
-            <Typography variant="subtitle1" align="center">
+            <Typography variant="h6" align="center">
               Soporte de Descarga
             </Typography>
           </Grid>
@@ -130,7 +184,7 @@ const ECDescargasAPage = () => {
 
         {/* Filas dinámicas */}
         {rows.map((row, index) => (
-          <Grid container spacing={2} key={row.id} alignItems="center">
+          <Grid container spacing={2} key={row.id} alignItems="center" style={{ marginTop: '2px', marginBottom: '2px' }}>
             {/* Cargos */}
             <Grid item xs={4}>
               <TextField
@@ -203,15 +257,12 @@ const ECDescargasAPage = () => {
 
         {/* Botones de acción */}
         <Grid container spacing={2} style={{ marginTop: '16px' }}>
-          <Grid item xs={6}>
-            <Button variant="contained" color="success" fullWidth>
-              Finalizar
-            </Button>
-          </Grid>
-          <Grid item xs={6}>
-            <Button variant="contained" color="error" fullWidth>
-              Cancelar
-            </Button>
+          <Grid container spacing={2} style={{ marginTop: '16px' }} justifyContent="center">
+            <Grid item xs={12} sm={6}>
+              <Button variant="contained" color="success" fullWidth onClick={handleFinalizar} disabled={!isFormValid()}>
+                Finalizar
+              </Button>
+            </Grid>
           </Grid>
         </Grid>
       </Grid>
@@ -220,4 +271,3 @@ const ECDescargasAPage = () => {
 };
 
 export default ECDescargasAPage;
-
