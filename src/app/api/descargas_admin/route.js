@@ -6,7 +6,7 @@ export async function GET(request) {
       SELECT 
         p.nombre AS nombre_profesor, 
         fa.nombre_cargo, 
-        da.porcentaje, 
+        fa.porcentaje, 
         TO_BASE64(da.soporte) AS soporte
       FROM proyecto010.descarga_admin da
       JOIN proyecto010.profesores p ON da.id_profesor = p.numero_doc

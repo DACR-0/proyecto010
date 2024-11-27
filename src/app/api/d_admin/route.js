@@ -43,28 +43,42 @@ export async function POST(req) {
       }
 
       try {
-        console.log('holaaaaaaa',req)
-        const { profesor, periodo, rows } = req.body; // Desestructuración directa
-        const parsedRows = JSON.parse(rows); // Asegúrate de que "rows" esté parseado
 
-        console.log('Datos recibidos:', { profesor, periodo, parsedRows });
+        const data = await req.formData();
+
+        const profesor = data.get("profesor");
+        const periodo = data.get("periodo");
+        const cantidadArchivos = data.get("cantidadArchivos");
+
+        let rows = [];
+
+        for(var i = 0 ; i < cantidadArchivos ; i++) {
+          rows.push({
+            cargo: data.get(`rows[${i}][cargo]`),
+            soporte: data.get(`rows[${i}][soporte]`)
+          });
+        }
+        console.log("PROFESOR: ", profesor);
+        console.log("PERIODO: ", periodo);
+        console.log("CANTIDAD ARCHIVOS: ", cantidadArchivos);
+        console.log("FILAS: ", rows);
 
         const sqlInsert = `
           INSERT INTO descarga_admin (id_profesor, id_fa, soporte, periodo)
           VALUES (?, ?, ?, ?)
         `;
 
-        for (const row of parsedRows) {
+        for (const row of rows) {
           if (row.cargo && row.soporte) {
-            const file = req.files.find((f) => f.originalname === row.soporte.name);
+            /*const file = req.files.find((f) => f.originalname === row.soporte.name);
 
             if (!file) {
               console.error('Archivo no encontrado para la fila:', row);
               continue;
-            }
+            }*/
 
             await new Promise((innerResolve, innerReject) => {
-              db.query(sqlInsert, [profesor, row.cargo, file.path, periodo], (err) => {
+              db.query(sqlInsert, [profesor, row.cargo, `./public/uploads/${row.soporte.name}`, periodo], (err) => {
                 if (err) {
                   console.error('Error al insertar en la base de datos:', err);
                   return innerReject(err);

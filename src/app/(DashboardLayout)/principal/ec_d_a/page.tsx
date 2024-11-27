@@ -12,14 +12,14 @@ interface Cargo {
 
 interface Row {
   id: number;
-  cargo: string;
+  cargo: number | null; // Ahora es un número (id_fa) en vez de string
   porcentaje: number | null;
   soporte: File | null;
 }
 
 const ECDescargasAPage = () => {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, cargo: '', porcentaje: null, soporte: null },
+    { id: 1, cargo: null, porcentaje: null, soporte: null },
   ]);
   const [profesores, setProfesores] = useState<{ id: number; nombre: string; numero_doc: string }[]>([]);
   const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>(''); // Ahora guardará el numero_doc
@@ -59,7 +59,7 @@ const ECDescargasAPage = () => {
 
   // Función para agregar filas
   const handleAddRow = () => {
-    setRows([...rows, { id: rows.length + 1, cargo: '', porcentaje: null, soporte: null }]);
+    setRows([...rows, { id: rows.length + 1, cargo: null, porcentaje: null, soporte: null }]);
   };
 
   // Función para eliminar la última fila
@@ -81,6 +81,7 @@ const handleFinalizar = async () => {
     const formData = new FormData();
     formData.append('profesor', profesorSeleccionado); // Se guarda el número de documento del profesor
     formData.append('periodo', '2025-1'); // Ejemplo de período
+    formData.append('cantidadArchivos', `${rows.length}`); //Cantidad de archivos enviados
 
     // Agregar los elementos de las filas al FormData
     rows.forEach((row, index) => {
@@ -107,10 +108,7 @@ const handleFinalizar = async () => {
     // Enviar los datos a la API
     const response = await fetch('/api/d_admin', {
       method: 'POST',
-      body: formData,
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      }
+      body:formData, //JSON.parse('{}'),
     });
 
     if (!response.ok) {
