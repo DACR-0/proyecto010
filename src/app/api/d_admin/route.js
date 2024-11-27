@@ -1,40 +1,97 @@
-import { pool } from '@/utils/db'; // Ajusta esta ruta si tu archivo de conexión está en otro lugar
+import mysql from 'mysql2';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
-export async function POST(request) {
-  try {
-    const body = await request.json();
-    const { profesor, rows, periodo } = body;
+// Configuración de conexión a MySQL
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root', // Cambia según tu configuración
+  password: 'root',
+  database: 'proyecto010'
+});
 
-    if (!profesor || !rows || rows.length === 0) {
-      return new Response(JSON.stringify({ error: 'Datos insuficientes' }), { status: 400 });
+// Configuración de Multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = './public/uploads/';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir); // Crea el directorio si no existe
     }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Genera un nombre único
+  }
+});
 
-    for (const row of rows) {
-      const { cargo, porcentaje, soporte } = row;
+const upload = multer({ storage: storage });
 
-      // Obtener id_fa del cargo
-      const [result] = await pool.query(
-        'SELECT id_fa FROM f_administrativas WHERE nombre_cargo = ?',
-        [cargo]
-      );
+export async function POST(req) {
+  return new Promise((resolve, reject) => {
+    const formDataParser = upload.any();
 
-      if (result.length === 0) {
-        return new Response(JSON.stringify({ error: `Cargo no encontrado: ${cargo}` }), { status: 404 });
+    formDataParser(req, {}, async (err) => {
+      if (err) {
+        console.error('Error al procesar archivos:', err);
+        return resolve(
+          new Response(
+            JSON.stringify({ success: false, message: 'Error al procesar los archivos' }),
+            { status: 400 }
+          )
+        );
       }
 
-      const id_fa = result[0].id_fa;
+      try {
+        console.log('holaaaaaaa',req)
+        const { profesor, periodo, rows } = req.body; // Desestructuración directa
+        const parsedRows = JSON.parse(rows); // Asegúrate de que "rows" esté parseado
 
-      // Insertar la descarga en la base de datos
-      await pool.query(
-        'INSERT INTO descarga_admin (id_profesor, id_fa, porcentaje, soporte, periodo) VALUES (?, ?, ?, ?, ?)',
-        [profesor, id_fa, porcentaje, soporte || null, periodo]
-      );
-    }
+        console.log('Datos recibidos:', { profesor, periodo, parsedRows });
 
-    return new Response(JSON.stringify({ success: true }), { status: 201 });
-  } catch (error) {
-    console.error('Error al insertar descargas:', error);
-    return new Response(JSON.stringify({ error: 'Error interno al insertar descargas' }), { status: 500 });
-  }
+        const sqlInsert = `
+          INSERT INTO descarga_admin (id_profesor, id_fa, soporte, periodo)
+          VALUES (?, ?, ?, ?)
+        `;
+
+        for (const row of parsedRows) {
+          if (row.cargo && row.soporte) {
+            const file = req.files.find((f) => f.originalname === row.soporte.name);
+
+            if (!file) {
+              console.error('Archivo no encontrado para la fila:', row);
+              continue;
+            }
+
+            await new Promise((innerResolve, innerReject) => {
+              db.query(sqlInsert, [profesor, row.cargo, file.path, periodo], (err) => {
+                if (err) {
+                  console.error('Error al insertar en la base de datos:', err);
+                  return innerReject(err);
+                }
+                innerResolve();
+              });
+            });
+          } else {
+            console.warn('Fila incompleta, no se procesará:', row);
+          }
+        }
+
+        resolve(
+          new Response(
+            JSON.stringify({ success: true, message: 'Descargas subidas exitosamente' }),
+            { status: 200 }
+          )
+        );
+      } catch (error) {
+        console.error('Error al procesar la solicitud:', error);
+        resolve(
+          new Response(
+            JSON.stringify({ success: false, message: 'Error al procesar la solicitud' }),
+            { status: 500 }
+          )
+        );
+      }
+    });
+  });
 }
-

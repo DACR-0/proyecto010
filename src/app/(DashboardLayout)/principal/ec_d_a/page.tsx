@@ -5,6 +5,7 @@ import { Grid, Typography, TextField, Button, MenuItem } from '@mui/material';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
 interface Cargo {
+  id_fa: number;
   nombre_cargo: string;
   porcentaje: number;
 }
@@ -13,7 +14,7 @@ interface Row {
   id: number;
   cargo: string;
   porcentaje: number | null;
-  soporte: string | null;
+  soporte: File | null;
 }
 
 const ECDescargasAPage = () => {
@@ -75,52 +76,58 @@ const ECDescargasAPage = () => {
   };
 
   // Función para finalizar
-  const handleFinalizar = async () => {
-    if (!isFormValid()) {
-      alert('Por favor, complete todos los campos antes de enviar el formulario.');
-      return; // No continuar si no es válido
-    }
+const handleFinalizar = async () => {
+  try {
+    const formData = new FormData();
+    formData.append('profesor', profesorSeleccionado); // Se guarda el número de documento del profesor
+    formData.append('periodo', '2025-1'); // Ejemplo de período
 
-    const confirmar = window.confirm('¿Estás seguro de que deseas enviar el formulario?');
+    // Agregar los elementos de las filas al FormData
+    rows.forEach((row, index) => {
+      // Enviar el id_fa del cargo y no el nombre
+      formData.append(`rows[${index}][cargo]`, String(row.cargo)); // Ahora enviamos el id_fa
 
-    if (!confirmar) {
-      return; // Si el usuario cancela, no se realiza ninguna acción
-    }
-
-    try {
-      const data = {
-        profesor: profesorSeleccionado,
-        rows: rows.map((row) => ({
-          cargo: row.cargo,
-          porcentaje: row.porcentaje,
-          soporte: row.soporte,
-        })),
-        periodo: '2025-1', // Cambia este valor según corresponda
-      };
-
-      const response = await fetch('/api/d_admin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al subir las descargas');
+      // Si existe un archivo de soporte, adjúntalo
+      if (row.soporte) {
+        formData.append(`rows[${index}][soporte]`, row.soporte); // Adjuntar el archivo
       }
+    });
 
-      const result = await response.json();
-      if (result.success) {
-        alert('Descargas subidas exitosamente');
+    // Mostrar el contenido de FormData en la consola para depuración
+    const entries = formData.entries();  // Obtiene el iterador
+    let entry = entries.next(); // Primer valor
 
-        // Limpiar el formulario después de un envío exitoso
-        setProfesorSeleccionado(''); // Limpiar selección de profesor
-        setRows([{ id: 1, cargo: '', porcentaje: null, soporte: null }]); // Limpiar filas
-      }
-    } catch (error) {
-      console.error('Error al subir las descargas:', error);
-      alert('Hubo un problema al subir las descargas');
+    // Iterar manualmente sobre las entradas
+    while (!entry.done) {
+      const [key, value] = entry.value;
+      console.log(`${key}: ${value}`);  // Imprimir clave y valor
+      entry = entries.next();  // Avanzar al siguiente valor
     }
-  };
+
+    // Enviar los datos a la API
+    const response = await fetch('/api/d_admin', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al subir las descargas');
+    }
+
+    const result = await response.json();
+    if (result.success) {
+      alert('Descargas subidas exitosamente');
+      setProfesorSeleccionado('');
+      setRows([{ id: 1, cargo: null, porcentaje: null, soporte: null }]); // Resetear el formulario
+    }
+  } catch (error) {
+    console.error('Error al subir las descargas:', error);
+    alert('Hubo un problema al subir las descargas');
+  }
+};
 
   return (
     <DashboardCard title="Editar y Crear Descargas Académicas">
@@ -192,19 +199,19 @@ const ECDescargasAPage = () => {
                 select
                 variant="outlined"
                 label="Cargo"
-                value={row.cargo}
+                value={row.cargo ?? ''}
                 onChange={(e) => {
-                  const selectedCargo = e.target.value;
-                  const foundCargo = cargos.find((cargo) => cargo.nombre_cargo === selectedCargo);
+                  const selectedCargoId = Number(e.target.value); // Ahora seleccionamos el id_fa
+                  const foundCargo = cargos.find((cargo) => cargo.id_fa === selectedCargoId);
 
                   const updatedRows = [...rows];
-                  updatedRows[index].cargo = selectedCargo;
+                  updatedRows[index].cargo = selectedCargoId; // Guardamos el id_fa
                   updatedRows[index].porcentaje = foundCargo ? foundCargo.porcentaje : null;
                   setRows(updatedRows);
                 }}
               >
                 {cargos.map((cargo) => (
-                  <MenuItem key={cargo.nombre_cargo} value={cargo.nombre_cargo}>
+                  <MenuItem key={cargo.id_fa} value={cargo.id_fa}>
                     {cargo.nombre_cargo}
                   </MenuItem>
                 ))}
@@ -240,7 +247,7 @@ const ECDescargasAPage = () => {
                     const file = e.target.files?.[0];
                     if (file) {
                       const updatedRows = [...rows];
-                      updatedRows[index].soporte = file.name;
+                      updatedRows[index].soporte = file;
                       setRows(updatedRows);
                     }
                   }}
@@ -248,7 +255,7 @@ const ECDescargasAPage = () => {
               </Button>
               {row.soporte && (
                 <Typography variant="body2" style={{ marginTop: '8px', textAlign: 'center' }}>
-                  {row.soporte}
+                  {row.soporte.name}
                 </Typography>
               )}
             </Grid>
