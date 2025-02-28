@@ -27,13 +27,19 @@ const Menuitems = [
   },
   {
     navlabel: true,
-    subheader: "PROFESORES A PROGRAMAR",
+    subheader: "PROFESORES",
   },
   {
     id: uniqueId(),
-    title: "Profesores",
+    title: "Profesores Planta",
     icon: IconArrowBadgeRight,
     href: "/principal/profesores",
+  },
+  {
+    id: uniqueId(),
+    title: "Profesores Catedra",
+    icon: IconArrowBadgeRight,
+    href: "/principal/profesores_catedra",
   },
   {
     navlabel: true,
@@ -69,6 +75,26 @@ const Menuitems = [
     title: "Asignaturas",
     icon: IconArrowBadgeRight,
     href: "/principal/programacion",
+  },
+  {
+    navlabel: true,
+    subheader: "SITUACIONES ADMINISTRATIVAS",
+  },
+  {
+    id: uniqueId(),
+    title: "Situaciones administrativas",
+    icon: IconArrowBadgeRight,
+    href: "/principal/s_administrativa",
+  },
+  {
+    navlabel: true,
+    subheader: "HISTORICO",
+  },
+  {
+    id: uniqueId(),
+    title: "Historico programacion",
+    icon: IconArrowBadgeRight,
+    href: "/principal/p_a_h",
   },
   {
     navlabel: true,

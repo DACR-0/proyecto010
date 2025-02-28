@@ -5,37 +5,8 @@ import SalesOverview from '@/app/(DashboardLayout)/components/dashboard/SalesOve
 import MonthlyEarnings from '@/app/(DashboardLayout)/components/dashboard/MonthlyEarnings';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import { IconClock, IconUsers } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
 
 const Dashboard = () => {
-  // Estados para almacenar los datos de la API
-    const [horasCatedra, setHorasCatedra] = useState(null);
-    const [horasPlanta, setHorasPlanta] = useState(null);
-    const [horasOcasionales, setHorasOcasionales] = useState(null);
-    const [horasHonorarios, setHorasHonorarios] = useState(null);
-    const [horasTotal, setHorasTotal] = useState(null);
-  
-    useEffect(() => {
-      // Función para obtener los datos de la API
-      const fetchData = async () => {
-        try {
-          const response = await fetch('http://localhost:3000/api/dashboard'); // Asegúrate de que la URL sea correcta
-          const data = await response.json();
-          
-          // Asignamos los datos a los estados correspondientes
-          setHorasCatedra(data[0].horas_catedra);
-          setHorasPlanta(data[0].horas_planta);
-          setHorasOcasionales(data[0].horas_ocasionales);
-          setHorasHonorarios(data[0].horas_honorarios);
-          setHorasTotal(data[0].horas_total);
-        } catch (error) {
-          console.error('Error al obtener los datos:', error);
-        }
-      };
-  
-      fetchData();
-    }, []); // Solo se ejecuta una vez cuando el componente se monta
-  
   return (
     <PageContainer title="Dashboard" description="this is Dashboard">
       <Box sx={{ mt: 2 }}>
@@ -52,7 +23,7 @@ const Dashboard = () => {
                 <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                   <IconClock size={30} color="#ffffff" />
                 </Fab>
-                <Typography variant="h6" sx={{ ml: 1 }}>{horasCatedra ?? 'Cargando...'}</Typography>
+                <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
               </Box>
             </DashboardCard>
           </Grid>
@@ -66,7 +37,7 @@ const Dashboard = () => {
                 <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                   <IconClock size={30} color="#ffffff" />
                 </Fab>
-                <Typography variant="h6" sx={{ ml: 1 }}>{horasPlanta ?? 'Cargando...'}</Typography>
+                <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
               </Box>
             </DashboardCard>
           </Grid>
@@ -80,7 +51,7 @@ const Dashboard = () => {
                 <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                   <IconClock size={30} color="#ffffff" />
                 </Fab>
-                <Typography variant="h6" sx={{ ml: 1 }}>{horasOcasionales ?? 'Cargando...'}</Typography>
+                <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
               </Box>
             </DashboardCard>
           </Grid>
@@ -94,7 +65,7 @@ const Dashboard = () => {
                 <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                   <IconClock size={30} color="#ffffff" />
                 </Fab>
-                <Typography variant="h6" sx={{ ml: 1 }}>{horasHonorarios ?? 'Cargando...'}</Typography>
+                <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
               </Box>
             </DashboardCard>
           </Grid>
@@ -117,7 +88,7 @@ const Dashboard = () => {
                       <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                         <IconClock size={30} color="#ffffff" />
                       </Fab>
-                      <Typography variant="h6" sx={{ ml: 1 }}>{horasTotal ?? 'Cargando...'}</Typography>
+                      <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
                     </Box>
                   </DashboardCard>
                 </Grid>

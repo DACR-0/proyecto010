@@ -2,11 +2,7 @@ import { pool } from '@/utils/db';
 
 export async function GET(request) {
   try {
-    const [rows] = await pool.query(`SELECT 
-p.nombre AS nombre_profesor, fe.nombre_fe, de.porcentaje, de.soporte AS soporte
-FROM proyecto010.descarga_extencion de
-JOIN proyecto010.profesores p ON de.id_profesor = p.numero_doc
-JOIN proyecto010.f_extencion fe ON de.id_fe = fe.id_fe;`);
+    const [rows] = await pool.query('SELECT * FROM proyecto010.historico limit 1000;');
     return new Response(JSON.stringify(rows), { status: 200 });
   } catch (error) {
     console.error('Ocurrio un error', error);

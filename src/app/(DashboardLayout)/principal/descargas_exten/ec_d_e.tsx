@@ -17,7 +17,7 @@ interface Row {
   soporte: File | null;
 }
 
-const ECDescargasAPage = () => {
+const ECDescargasEPage = () => {
   const [rows, setRows] = useState<Row[]>([
     { id: 1, cargo: null, porcentaje: null, soporte: null },
   ]);
@@ -261,7 +261,7 @@ const ECDescargasAPage = () => {
                     setRows(updatedRows);
                   } else {
                     // Si el valor está fuera de rango, simplemente no se hace nada
-                    alert(`El porcentaje debe estar entre 0 y ${cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100}`);
+                    alert(`El porcentaje maximo de descarga permitido para este cargo es ${cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100}`);
                   }
                 }}
                 inputProps={{
@@ -318,4 +318,4 @@ const ECDescargasAPage = () => {
   );
 };
 
-export default ECDescargasAPage;
+export default ECDescargasEPage;

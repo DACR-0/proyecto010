@@ -5,19 +5,19 @@ import { Grid, Typography, TextField, Button, MenuItem } from '@mui/material';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
 interface Cargo {
-  id_fe: number;
-  nombre_fe: string;
-  porcentaje_max_fe: number;
+  id_fi: number;
+  nombre_fi: string;
+  porcentaje_max_fi: number;
 }
 
 interface Row {
   id: number;
-  cargo: number | null; // Ahora es un número (id_fe) en vez de string
+  cargo: number | null; // Ahora es un número (id_fi) en vez de string
   porcentaje: number | null;
   soporte: File | null;
 }
 
-const ECDescargasAPage = () => {
+const ECDescargasIPage = () => {
   const [rows, setRows] = useState<Row[]>([
     { id: 1, cargo: null, porcentaje: null, soporte: null },
   ]);
@@ -45,7 +45,7 @@ const ECDescargasAPage = () => {
   useEffect(() => {
     const fetchCargos = async () => {
       try {
-        const response = await fetch('/api/ec_d_e');
+        const response = await fetch('/api/ec_d_i');
         if (!response.ok) throw new Error('Error al obtener los cargos');
         const data = await response.json();
         setCargos(data); // Asignar los datos obtenidos al estado
@@ -118,7 +118,7 @@ const ECDescargasAPage = () => {
       );
   
       // Enviar datos a la API con el porcentaje
-      const response = await fetch('/api/d_exten', {
+      const response = await fetch('/api/d_inves', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -228,7 +228,7 @@ const ECDescargasAPage = () => {
                 value={row.cargo ?? ''}
                 onChange={(e) => {
                   const selectedCargoId = Number(e.target.value); // Seleccionar el id_fa
-                  const foundCargo = cargos.find((cargo) => cargo.id_fe === selectedCargoId);
+                  const foundCargo = cargos.find((cargo) => cargo.id_fi === selectedCargoId);
                   const updatedRows = [...rows];
                   updatedRows[index].cargo = selectedCargoId; // Guardamos el id_fa
                   updatedRows[index].porcentaje = null; // Establecer el porcentaje como null para que el usuario lo edite
@@ -236,8 +236,8 @@ const ECDescargasAPage = () => {
                 }}
               >
                 {cargos.map((cargo) => (
-                  <MenuItem key={cargo.id_fe} value={cargo.id_fe}>
-                    {cargo.nombre_fe}
+                  <MenuItem key={cargo.id_fi} value={cargo.id_fi}>
+                    {cargo.nombre_fi}
                   </MenuItem>
                 ))}
               </TextField>
@@ -255,18 +255,18 @@ const ECDescargasAPage = () => {
                   const newValue = Number(e.target.value);
 
                   // Aseguramos que el nuevo valor esté entre 0 y el valor máximo
-                  if (newValue >= 0 && newValue <= (cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100)) {
+                  if (newValue >= 0 && newValue <= (cargos.find(cargo => cargo.id_fi === row.cargo)?.porcentaje_max_fi ?? 100)) {
                     const updatedRows = [...rows];
                     updatedRows[index].porcentaje = newValue;
                     setRows(updatedRows);
                   } else {
                     // Si el valor está fuera de rango, simplemente no se hace nada
-                    alert(`El porcentaje debe estar entre 0 y ${cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100}`);
+                    alert(`El porcentaje maximo de descarga permitido para este cargo es de ${cargos.find(cargo => cargo.id_fi === row.cargo)?.porcentaje_max_fi ?? 100}%`);
                   }
                 }}
                 inputProps={{
                   min: 0, // Establecer mínimo permitido en 0
-                  max: cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100, // Establecer máximo permitido según el cargo
+                  max: cargos.find(cargo => cargo.id_fi === row.cargo)?.porcentaje_max_fi ?? 100, // Establecer máximo permitido según el cargo
                 }}
               />
             </Grid>
@@ -318,4 +318,4 @@ const ECDescargasAPage = () => {
   );
 };
 
-export default ECDescargasAPage;
+export default ECDescargasIPage;

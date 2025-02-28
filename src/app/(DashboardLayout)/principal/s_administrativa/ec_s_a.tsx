@@ -4,26 +4,26 @@ import React, { useState, useEffect } from 'react';
 import { Grid, Typography, TextField, Button, MenuItem } from '@mui/material';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
-interface Cargo {
-  id_fe: number;
-  nombre_fe: string;
-  porcentaje_max_fe: number;
+interface Situaciones {
+  ids_admin: number;
+  nombre: string;
 }
 
 interface Row {
   id: number;
-  cargo: number | null; // Ahora es un número (id_fe) en vez de string
-  porcentaje: number | null;
+  cargo: number | null;
   soporte: File | null;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
 }
 
-const ECDescargasAPage = () => {
+const ECSituacionesAPage = () => {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, cargo: null, porcentaje: null, soporte: null },
+    { id: 1, cargo: null, soporte: null, fecha_inicio: null, fecha_fin: null },
   ]);
   const [profesores, setProfesores] = useState<{ id: number; nombre: string; numero_doc: string }[]>([]);
-  const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>(''); // Ahora guardará el numero_doc
-  const [cargos, setCargos] = useState<Cargo[]>([]);
+  const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>('');
+  const [cargos, setCargos] = useState<Situaciones[]>([]);
 
   // Cargar datos de la API de profesores
   useEffect(() => {
@@ -45,7 +45,7 @@ const ECDescargasAPage = () => {
   useEffect(() => {
     const fetchCargos = async () => {
       try {
-        const response = await fetch('/api/ec_d_e');
+        const response = await fetch('/api/ec_s_a');
         if (!response.ok) throw new Error('Error al obtener los cargos');
         const data = await response.json();
         setCargos(data); // Asignar los datos obtenidos al estado
@@ -59,7 +59,7 @@ const ECDescargasAPage = () => {
 
   // Función para agregar filas
   const handleAddRow = () => {
-    setRows([...rows, { id: rows.length + 1, cargo: null, porcentaje: null, soporte: null }]);
+    setRows([...rows, { id: rows.length + 1, cargo: null, soporte: null, fecha_inicio: null, fecha_fin: null }]);
   };
 
   // Función para eliminar la última fila
@@ -71,8 +71,7 @@ const ECDescargasAPage = () => {
 
   // Validación de formulario
   const isFormValid = () => {
-    // Verificar si todas las filas tienen un cargo y un archivo adjunto
-    return rows.every((row) => row.cargo && row.soporte);
+    return rows.every((row) => row.cargo && row.soporte && row.fecha_inicio && row.fecha_fin);
   };
 
   // Función para finalizar
@@ -82,31 +81,31 @@ const ECDescargasAPage = () => {
         alert('Por favor, selecciona un profesor.');
         return;
       }
-  
+
       if (!isFormValid()) {
         alert('Por favor, completa todos los campos y adjunta los soportes necesarios.');
         return;
       }
-  
+
       // Subir archivos y obtener sus rutas
       const rowsWithFilePaths = await Promise.all(
         rows.map(async (row) => {
-          if (row.soporte instanceof File) { // Validar que es un archivo
+          if (row.soporte instanceof File) {
             const formData = new FormData();
             formData.append('file', row.soporte);
-  
+
             try {
               const uploadResponse = await fetch('http://localhost:4000/upload', {
                 method: 'POST',
                 body: formData,
               });
-  
+
               if (!uploadResponse.ok) {
                 throw new Error('Error al subir el archivo');
               }
-  
+
               const { filePath } = await uploadResponse.json();
-              return { ...row, soporte: filePath }; // Asegúrate de incluir el porcentaje en el objeto
+              return { ...row, soporte: filePath }; // Asegúrate de incluir el soporte en el objeto
             } catch (error) {
               console.error('Error al subir archivo:', error);
               alert('Error al subir archivo: ' + (error as Error).message);
@@ -116,47 +115,46 @@ const ECDescargasAPage = () => {
           return row;
         })
       );
-  
-      // Enviar datos a la API con el porcentaje
-      const response = await fetch('/api/d_exten', {
+
+      // Enviar datos a la API con el soporte, fecha de inicio y fecha de fin
+      const response = await fetch('/api/s_admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profesor: profesorSeleccionado,
-          periodo: '2025-1',
           rows: rowsWithFilePaths.map(row => ({
             cargo: row.cargo,
-            porcentaje: row.porcentaje, // Asegúrate de enviar el porcentaje
-            soporte: row.soporte
+            soporte: row.soporte,
+            fecha_inicio: row.fecha_inicio,
+            fecha_fin: row.fecha_fin,
           })),
         }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al guardar las descargas');
       }
-  
+
       const result = await response.json();
-      alert('Descargas guardadas exitosamente');
-  
+      alert('guardada exitosamente');
+
       // Resetear el formulario
       setProfesorSeleccionado('');
-      setRows([{ id: 1, cargo: null, porcentaje: null, soporte: null }]);
+      setRows([{ id: 1, cargo: null, soporte: null, fecha_inicio: null, fecha_fin: null }]);
     } catch (error) {
-      console.error('Error al guardar las descargas:', error);
-  
+      console.error('Error al guardar:', error);
+
       if (error instanceof Error) {
         alert(error.message);
       } else {
-        alert('Hubo un problema al guardar las descargas');
+        alert('Hubo un problema al guardar');
       }
     }
   };
-  
 
   return (
-    <DashboardCard title="Editar y Crear Descargas Académicas">
+    <DashboardCard title="Editar y Crear Descargas Académicas" sx={{ maxWidth: '1200px', margin: '0 auto' }}>
       <Grid container spacing={3}>
         {/* Selección del profesor */}
         <Grid item xs={12}>
@@ -198,88 +196,95 @@ const ECDescargasAPage = () => {
 
         {/* Encabezados */}
         <Grid container spacing={2} style={{ marginTop: '16px', marginBottom: '16px' }}>
-          <Grid item xs={4}>
+          <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
             <Typography variant="h6" align="center">
-              Actividad de 
+              Situación Administrativa
             </Typography>
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
             <Typography variant="h6" align="center">
-              Porcentaje Descarga
+              Fecha de inicio
             </Typography>
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
+            <Typography variant="h6" align="center">
+              Fecha de fin
+            </Typography>
+          </Grid>
+          <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
             <Typography variant="h6" align="center">
               Soporte de Descarga
             </Typography>
           </Grid>
         </Grid>
 
-        {/* Filas dinámicas */}
+        {/* Filas dinamicas */}
         {rows.map((row, index) => (
           <Grid container spacing={2} key={row.id} alignItems="center" style={{ marginTop: '2px', marginBottom: '2px' }}>
-            {/* Cargos */}
-            <Grid item xs={4}>
+            {/* Situación Administrativa */}
+            <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
               <TextField
                 fullWidth
                 select
                 variant="outlined"
-                label="Cargo"
+                label="Situación Administrativa"
                 value={row.cargo ?? ''}
                 onChange={(e) => {
-                  const selectedCargoId = Number(e.target.value); // Seleccionar el id_fa
-                  const foundCargo = cargos.find((cargo) => cargo.id_fe === selectedCargoId);
+                  const selectedCargoId = Number(e.target.value);
                   const updatedRows = [...rows];
-                  updatedRows[index].cargo = selectedCargoId; // Guardamos el id_fa
-                  updatedRows[index].porcentaje = null; // Establecer el porcentaje como null para que el usuario lo edite
+                  updatedRows[index].cargo = selectedCargoId;
                   setRows(updatedRows);
                 }}
               >
                 {cargos.map((cargo) => (
-                  <MenuItem key={cargo.id_fe} value={cargo.id_fe}>
-                    {cargo.nombre_fe}
+                  <MenuItem key={cargo.ids_admin} value={cargo.ids_admin}>
+                    {cargo.nombre}
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
 
-            {/* Porcentaje */}
-            <Grid item xs={4}>
+            {/* Fecha Inicio */}
+            <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
               <TextField
                 fullWidth
-                variant="outlined"
-                type="number"
-                label="Porcentaje"
-                value={row.porcentaje ?? ''}
+                label="Fecha Inicio"
+                type="date"
+                value={row.fecha_inicio ?? ''}
                 onChange={(e) => {
-                  const newValue = Number(e.target.value);
+                  const updatedRows = [...rows];
+                  updatedRows[index].fecha_inicio = e.target.value;
+                  setRows(updatedRows);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
 
-                  // Aseguramos que el nuevo valor esté entre 0 y el valor máximo
-                  if (newValue >= 0 && newValue <= (cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100)) {
-                    const updatedRows = [...rows];
-                    updatedRows[index].porcentaje = newValue;
-                    setRows(updatedRows);
-                  } else {
-                    // Si el valor está fuera de rango, simplemente no se hace nada
-                    alert(`El porcentaje debe estar entre 0 y ${cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100}`);
-                  }
+            {/* Fecha Fin */}
+            <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
+              <TextField
+                fullWidth
+                label="Fecha Fin"
+                type="date"
+                value={row.fecha_fin ?? ''}
+                onChange={(e) => {
+                  const updatedRows = [...rows];
+                  updatedRows[index].fecha_fin = e.target.value;
+                  setRows(updatedRows);
                 }}
-                inputProps={{
-                  min: 0, // Establecer mínimo permitido en 0
-                  max: cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100, // Establecer máximo permitido según el cargo
-                }}
+                InputLabelProps={{ shrink: true }}
               />
             </Grid>
 
             {/* Soporte */}
-            <Grid item xs={4}>
+            <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
               <Button
                 variant="outlined"
                 component="label"
                 fullWidth
                 style={{ textTransform: 'none' }}
               >
-                Soporte
+                Subir Soporte
                 <input
                   type="file"
                   accept=".pdf"
@@ -303,6 +308,7 @@ const ECDescargasAPage = () => {
           </Grid>
         ))}
 
+
         {/* Botones de acción */}
         <Grid container spacing={2} style={{ marginTop: '16px' }}>
           <Grid container spacing={2} style={{ marginTop: '16px' }} justifyContent="center">
@@ -318,4 +324,4 @@ const ECDescargasAPage = () => {
   );
 };
 
-export default ECDescargasAPage;
+export default ECSituacionesAPage;

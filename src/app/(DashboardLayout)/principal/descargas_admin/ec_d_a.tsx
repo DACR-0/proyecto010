@@ -5,14 +5,14 @@ import { Grid, Typography, TextField, Button, MenuItem } from '@mui/material';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
 interface Cargo {
-  id_fe: number;
-  nombre_fe: string;
-  porcentaje_max_fe: number;
+  id_fa: number;
+  nombre_cargo: string;
+  porcentaje: number;
 }
 
 interface Row {
   id: number;
-  cargo: number | null; // Ahora es un número (id_fe) en vez de string
+  cargo: number | null; // Ahora es un número (id_fa) en vez de string
   porcentaje: number | null;
   soporte: File | null;
 }
@@ -45,7 +45,7 @@ const ECDescargasAPage = () => {
   useEffect(() => {
     const fetchCargos = async () => {
       try {
-        const response = await fetch('/api/ec_d_e');
+        const response = await fetch('/api/ec_d_a');
         if (!response.ok) throw new Error('Error al obtener los cargos');
         const data = await response.json();
         setCargos(data); // Asignar los datos obtenidos al estado
@@ -106,29 +106,26 @@ const ECDescargasAPage = () => {
               }
   
               const { filePath } = await uploadResponse.json();
-              return { ...row, soporte: filePath }; // Asegúrate de incluir el porcentaje en el objeto
+              return { ...row, soporte: filePath };
             } catch (error) {
               console.error('Error al subir archivo:', error);
               alert('Error al subir archivo: ' + (error as Error).message);
               return row; // Devolver la fila original sin modificar
             }
+            
           }
           return row;
         })
       );
   
-      // Enviar datos a la API con el porcentaje
-      const response = await fetch('/api/d_exten', {
+      // Enviar datos a la API
+      const response = await fetch('/api/d_admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profesor: profesorSeleccionado,
           periodo: '2025-1',
-          rows: rowsWithFilePaths.map(row => ({
-            cargo: row.cargo,
-            porcentaje: row.porcentaje, // Asegúrate de enviar el porcentaje
-            soporte: row.soporte
-          })),
+          rows: rowsWithFilePaths,
         }),
       });
   
@@ -145,16 +142,16 @@ const ECDescargasAPage = () => {
       setRows([{ id: 1, cargo: null, porcentaje: null, soporte: null }]);
     } catch (error) {
       console.error('Error al guardar las descargas:', error);
-  
+    
       if (error instanceof Error) {
         alert(error.message);
       } else {
         alert('Hubo un problema al guardar las descargas');
       }
     }
+    
   };
   
-
   return (
     <DashboardCard title="Editar y Crear Descargas Académicas">
       <Grid container spacing={3}>
@@ -185,14 +182,14 @@ const ECDescargasAPage = () => {
             onClick={handleAddRow}
             style={{ backgroundColor: '#007bff', color: '#fff', textTransform: 'none' }}
           >
-            Agregar
+            Agregar Cargo
           </Button>
           <Button
             variant="contained"
             onClick={handleRemoveRow}
             style={{ backgroundColor: '#dc3545', color: '#fff', textTransform: 'none' }}
           >
-            Eliminar Último
+            Eliminar Último Cargo
           </Button>
         </Grid>
 
@@ -200,7 +197,7 @@ const ECDescargasAPage = () => {
         <Grid container spacing={2} style={{ marginTop: '16px', marginBottom: '16px' }}>
           <Grid item xs={4}>
             <Typography variant="h6" align="center">
-              Actividad de 
+              Cargos
             </Typography>
           </Grid>
           <Grid item xs={4}>
@@ -227,17 +224,18 @@ const ECDescargasAPage = () => {
                 label="Cargo"
                 value={row.cargo ?? ''}
                 onChange={(e) => {
-                  const selectedCargoId = Number(e.target.value); // Seleccionar el id_fa
-                  const foundCargo = cargos.find((cargo) => cargo.id_fe === selectedCargoId);
+                  const selectedCargoId = Number(e.target.value); // Ahora seleccionamos el id_fa
+                  const foundCargo = cargos.find((cargo) => cargo.id_fa === selectedCargoId);
+
                   const updatedRows = [...rows];
                   updatedRows[index].cargo = selectedCargoId; // Guardamos el id_fa
-                  updatedRows[index].porcentaje = null; // Establecer el porcentaje como null para que el usuario lo edite
+                  updatedRows[index].porcentaje = foundCargo ? foundCargo.porcentaje : null;
                   setRows(updatedRows);
                 }}
               >
                 {cargos.map((cargo) => (
-                  <MenuItem key={cargo.id_fe} value={cargo.id_fe}>
-                    {cargo.nombre_fe}
+                  <MenuItem key={cargo.id_fa} value={cargo.id_fa}>
+                    {cargo.nombre_cargo}
                   </MenuItem>
                 ))}
               </TextField>
@@ -251,23 +249,7 @@ const ECDescargasAPage = () => {
                 type="number"
                 label="Porcentaje"
                 value={row.porcentaje ?? ''}
-                onChange={(e) => {
-                  const newValue = Number(e.target.value);
-
-                  // Aseguramos que el nuevo valor esté entre 0 y el valor máximo
-                  if (newValue >= 0 && newValue <= (cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100)) {
-                    const updatedRows = [...rows];
-                    updatedRows[index].porcentaje = newValue;
-                    setRows(updatedRows);
-                  } else {
-                    // Si el valor está fuera de rango, simplemente no se hace nada
-                    alert(`El porcentaje debe estar entre 0 y ${cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100}`);
-                  }
-                }}
-                inputProps={{
-                  min: 0, // Establecer mínimo permitido en 0
-                  max: cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100, // Establecer máximo permitido según el cargo
-                }}
+                InputProps={{ readOnly: true }}
               />
             </Grid>
 

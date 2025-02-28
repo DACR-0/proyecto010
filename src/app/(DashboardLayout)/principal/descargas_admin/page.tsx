@@ -5,17 +5,18 @@ import {
   Typography, Table,
   TableBody, TableCell,
   TableContainer, TableHead,
-  TableRow, Paper,
+  TableRow, Paper,CircularProgress ,
   Grid, TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle
 } from '@mui/material';
-import { IconEdit } from '@tabler/icons-react';
-//import ECDescargasA from './ec_d_a'
+import { IconEdit, IconPlus, IconRefresh } from '@tabler/icons-react';
+import ECDescargasA from './ec_d_a'
+import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
 interface Descarga {
   nombre_profesor: string;
   nombre_cargo: string;
   porcentaje: number;
-  soporte: File | null; // Puede ser null si no hay archivo asociado
+  soporte: string | null; // Permite que sea opcional o null
 }
 
 const DescargasAPage: React.FC = () => {
@@ -51,8 +52,16 @@ const DescargasAPage: React.FC = () => {
   }
 
   if (loading) {
-    return <Typography>Cargando...</Typography>;
+    return (
+      <Grid container justifyContent="center" alignItems="center" style={{ height: '50vh' }}>
+        <Grid item>
+          <CircularProgress color="primary" />
+          <Typography variant="h6" sx={{ mt: 2 }}>Cargando descargas académicas...</Typography>
+        </Grid>
+      </Grid>
+    );
   }
+  
 
   const handleOpenDialog = () => {
     setOpenDialog(true); // Abre el modal
@@ -67,37 +76,48 @@ const DescargasAPage: React.FC = () => {
   const handleCloseDialog2 = () => {
     setOpenDialog2(false); // Cierra el modal 2
   };
+  const handleRefresh = () => {
+    window.location.reload(); // Recargar la página actual para volver a cargar las tablas
+  };
 
   return (
     <div>
-      <Typography
-        variant="h3"
-        sx={{ color: (theme) => theme.palette.primary.main }}
-        gutterBottom
-      >
-        <center>DESCARGAS ACADÉMICAS</center>
-      </Typography>
-      <Grid container spacing={2} style={{ marginTop: '16px', marginBottom: '16px' }}>
-        <Grid container spacing={2} style={{ marginTop: '16px' }} justifyContent="center">
-          <Grid item xs={12} sm={6}>
-            <Button
-              variant="contained"
-              component="label"
-              fullWidth
-              style={{ textTransform: 'none' }}
-              onClick={handleOpenDialog} // Abre el modal cuando se presiona el botón
-            >
-              Agregar
-            </Button>
+      <DashboardCard>
+        <div>
+          <Typography variant="h3" sx={{ color: (theme) => theme.palette.primary.main }} gutterBottom>
+            <center>DESCARGAS ACADÉMICAS</center>
+          </Typography>
+          <Grid container spacing={2} style={{ marginTop: '16px', marginBottom: '16px' }} justifyContent="center">
+            <Grid item xs={12} sm={6} style={{ display: 'flex', paddingRight: '16px', justifyContent: 'center' }}>
+              {/* Botón de Agregar */}
+              <Button
+                variant="contained"
+                startIcon={<IconPlus />}
+                onClick={handleOpenDialog}
+                style={{ marginRight: '16px' }} // Espacio entre los botones
+              >
+                Agregar
+              </Button>
+
+              {/* Botón de Actualizar */}
+              <Button
+                variant="contained"
+                startIcon={<IconRefresh />}
+                onClick={handleRefresh}
+              >
+                Actualizar
+              </Button>
+            </Grid>
           </Grid>
-        </Grid>
-      </Grid>
+        </div>
+      </DashboardCard>
 
       {/* Dialog Modal */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Agregar Descargas Académicas</DialogTitle>
         <DialogContent>
-           {/* Aquí insertas el formulario de ec_d_a <ECDescargasA />*/}
+           {/* Aquí insertas el formulario de ec_d_a <ECDescargasA />*/
+           <ECDescargasA />
+           }
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color="primary">
@@ -165,11 +185,13 @@ const DescargasAPage: React.FC = () => {
                         cursor: 'pointer',
                       }}
                       onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = `data:application/octet-stream;base64,${descarga.soporte}`;
-                        link.download = `soporte_${index}.pdf`; // Cambia la extensión según el tipo de archivo esperado
-                        link.click();
+                        if (!descarga.soporte) return; // Evita errores si es null o undefined
+                        const soporteFileName = descarga.soporte; // Extrae el nombre del archivo
+                        if (!soporteFileName) return; // Si sigue vacío, no hace nada
+                        const fileUrl = `http://localhost:4000/uploads/${encodeURIComponent(soporteFileName)}`;
+                        window.open(fileUrl, '_blank'); // Abre en nueva pestaña
                       }}
+                      
                     >
                       Ver Soporte
                     </button>
@@ -195,5 +217,4 @@ const DescargasAPage: React.FC = () => {
     </div>
   );
 };
-
 export default DescargasAPage;

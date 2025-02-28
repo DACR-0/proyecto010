@@ -1,8 +1,7 @@
-
 import dynamic from "next/dynamic";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 import { useTheme } from '@mui/material/styles';
-import { Stack, Typography, Avatar, Fab } from '@mui/material';
+import { Stack, Typography, Avatar, Fab, Box } from '@mui/material';
 import { IconArrowDownRight, IconCurrencyDollar } from '@tabler/icons-react';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
@@ -22,7 +21,7 @@ const MonthlyEarnings = () => {
       toolbar: {
         show: false,
       },
-      height: 60,
+      height: '100%',  // Asegura que el gráfico ocupe el 100% de la altura del contenedor
       sparkline: {
         enabled: true,
       },
@@ -44,6 +43,7 @@ const MonthlyEarnings = () => {
       theme: theme.palette.mode === 'dark' ? 'dark' : 'light',
     },
   };
+
   const seriescolumnchart: any = [
     {
       name: '',
@@ -56,15 +56,16 @@ const MonthlyEarnings = () => {
     <DashboardCard
       title="Monthly Earnings"
       action={
-        <Fab color="secondary" size="medium" sx={{color: '#ffffff'}}>
+        <Fab color="secondary" size="medium" sx={{ color: '#ffffff' }}>
           <IconCurrencyDollar width={24} />
         </Fab>
       }
       footer={
-        <Chart options={optionscolumnchart} series={seriescolumnchart} type="area" height={60} width={"100%"} />
+        <Chart options={optionscolumnchart} series={seriescolumnchart} type="area" height={140} width={"100%"} />
       }
+      sx={{ height: '100%' }}  // Asegúrate de que el DashboardCard ocupe todo el espacio disponible
     >
-      <>
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}> {/* Asegura que el contenido ocupe el 100% de la altura */}
         <Typography variant="h3" fontWeight="700" mt="-20px">
           $6,820
         </Typography>
@@ -79,9 +80,12 @@ const MonthlyEarnings = () => {
             last year
           </Typography>
         </Stack>
-      </>
+      </Box>
     </DashboardCard>
+
+    
   );
 };
 
 export default MonthlyEarnings;
+

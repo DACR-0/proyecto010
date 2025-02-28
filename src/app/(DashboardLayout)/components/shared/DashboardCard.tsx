@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent, Typography, Stack, Box } from "@mui/material";
 
+// Modificación: Agregar sx a las propiedades
 type Props = {
   title?: string;
   subtitle?: string;
@@ -11,6 +12,7 @@ type Props = {
   headsubtitle?: string | JSX.Element;
   children?: JSX.Element;
   middlecontent?: string | JSX.Element;
+  sx?: React.CSSProperties; // Esta es la línea que agrega la propiedad `sx`
 };
 
 const DashboardCard = ({
@@ -23,9 +25,10 @@ const DashboardCard = ({
   headtitle,
   headsubtitle,
   middlecontent,
+  sx, // Desestructurando sx aquí
 }: Props) => {
   return (
-    <Card sx={{ padding: 0 }} elevation={9} variant={undefined}>
+    <Card sx={{ padding: 0, ...sx }} elevation={9} variant={undefined}>
       {cardheading ? (
         <CardContent>
           <Typography variant="h5">{headtitle}</Typography>

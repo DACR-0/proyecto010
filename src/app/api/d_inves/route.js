@@ -10,11 +10,11 @@ export async function POST(req) {
     }
 
     for (const row of rows) {
-      const { cargo, soporte } = row;
+      const { cargo, porcentaje, soporte } = row;
 
       await pool.query(
-        `INSERT INTO descarga_admin (id_profesor, id_fa, soporte, periodo) VALUES (?, ?, ?, ?)`,
-        [profesor, cargo, soporte, periodo]
+        `INSERT INTO descarga_investigacion (id_profesor, id_fi, porcentaje, soporte, periodo) VALUES (?, ?, ?, ?, ?)`,
+        [profesor, cargo, porcentaje, soporte, periodo]
       );
     }
 
