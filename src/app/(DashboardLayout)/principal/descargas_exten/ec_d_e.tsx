@@ -15,11 +15,12 @@ interface Row {
   cargo: number | null; // Ahora es un número (id_fe) en vez de string
   porcentaje: number | null;
   soporte: File | null;
+  enlaceDrive: string | null; // Nuevo campo para el enlace de Google Drive
 }
 
 const ECDescargasEPage = () => {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, cargo: null, porcentaje: null, soporte: null },
+    { id: 1, cargo: null, porcentaje: null, soporte: null, enlaceDrive: '' },
   ]);
   const [profesores, setProfesores] = useState<{ id: number; nombre: string; numero_doc: string }[]>([]);
   const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>(''); // Ahora guardará el numero_doc
@@ -59,7 +60,7 @@ const ECDescargasEPage = () => {
 
   // Función para agregar filas
   const handleAddRow = () => {
-    setRows([...rows, { id: rows.length + 1, cargo: null, porcentaje: null, soporte: null }]);
+    setRows([...rows, { id: rows.length + 1, cargo: null, porcentaje: null, soporte: null, enlaceDrive: '' }]);
   };
 
   // Función para eliminar la última fila
@@ -71,8 +72,8 @@ const ECDescargasEPage = () => {
 
   // Validación de formulario
   const isFormValid = () => {
-    // Verificar si todas las filas tienen un cargo y un archivo adjunto
-    return rows.every((row) => row.cargo && row.soporte);
+    // Verificar si todas las filas tienen un cargo y un archivo o enlace adjunto
+    return rows.every((row) => row.cargo && (row.soporte || row.enlaceDrive));
   };
 
   // Función para finalizar
@@ -82,41 +83,43 @@ const ECDescargasEPage = () => {
         alert('Por favor, selecciona un profesor.');
         return;
       }
-  
+
       if (!isFormValid()) {
         alert('Por favor, completa todos los campos y adjunta los soportes necesarios.');
         return;
       }
-  
+
       // Subir archivos y obtener sus rutas
       const rowsWithFilePaths = await Promise.all(
         rows.map(async (row) => {
           if (row.soporte instanceof File) { // Validar que es un archivo
             const formData = new FormData();
             formData.append('file', row.soporte);
-  
+
             try {
               const uploadResponse = await fetch('http://localhost:4000/upload', {
                 method: 'POST',
                 body: formData,
               });
-  
+
               if (!uploadResponse.ok) {
                 throw new Error('Error al subir el archivo');
               }
-  
+
               const { filePath } = await uploadResponse.json();
-              return { ...row, soporte: filePath }; // Asegúrate de incluir el porcentaje en el objeto
+              return { ...row, soporte: filePath, enlaceDrive: '' }; // Asegúrate de incluir el archivo
             } catch (error) {
               console.error('Error al subir archivo:', error);
               alert('Error al subir archivo: ' + (error as Error).message);
               return row; // Devolver la fila original sin modificar
             }
+          } else if (row.enlaceDrive) {
+            return { ...row, soporte: row.enlaceDrive }; // Si hay enlace, guarda el enlace
           }
           return row;
         })
       );
-  
+
       // Enviar datos a la API con el porcentaje
       const response = await fetch('/api/d_exten', {
         method: 'POST',
@@ -131,21 +134,21 @@ const ECDescargasEPage = () => {
           })),
         }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al guardar las descargas');
       }
-  
+
       const result = await response.json();
       alert('Descargas guardadas exitosamente');
-  
+
       // Resetear el formulario
       setProfesorSeleccionado('');
-      setRows([{ id: 1, cargo: null, porcentaje: null, soporte: null }]);
+      setRows([{ id: 1, cargo: null, porcentaje: null, soporte: null, enlaceDrive: '' }]);
     } catch (error) {
       console.error('Error al guardar las descargas:', error);
-  
+
       if (error instanceof Error) {
         alert(error.message);
       } else {
@@ -153,7 +156,6 @@ const ECDescargasEPage = () => {
       }
     }
   };
-  
 
   return (
     <DashboardCard title="Editar y Crear Descargas Académicas">
@@ -200,7 +202,7 @@ const ECDescargasEPage = () => {
         <Grid container spacing={2} style={{ marginTop: '16px', marginBottom: '16px' }}>
           <Grid item xs={4}>
             <Typography variant="h6" align="center">
-              Actividad de 
+              Actividad de
             </Typography>
           </Grid>
           <Grid item xs={4}>
@@ -227,10 +229,10 @@ const ECDescargasEPage = () => {
                 label="Cargo"
                 value={row.cargo ?? ''}
                 onChange={(e) => {
-                  const selectedCargoId = Number(e.target.value); // Seleccionar el id_fa
+                  const selectedCargoId = Number(e.target.value); // Seleccionar el id_fe
                   const foundCargo = cargos.find((cargo) => cargo.id_fe === selectedCargoId);
                   const updatedRows = [...rows];
-                  updatedRows[index].cargo = selectedCargoId; // Guardamos el id_fa
+                  updatedRows[index].cargo = selectedCargoId; // Guardamos el id_fe
                   updatedRows[index].porcentaje = null; // Establecer el porcentaje como null para que el usuario lo edite
                   setRows(updatedRows);
                 }}
@@ -261,7 +263,7 @@ const ECDescargasEPage = () => {
                     setRows(updatedRows);
                   } else {
                     // Si el valor está fuera de rango, simplemente no se hace nada
-                    alert(`El porcentaje maximo de descarga permitido para este cargo es ${cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100}`);
+                    alert(`El porcentaje máximo de descarga permitido para este cargo es ${(cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100)}%`);
                   }
                 }}
                 inputProps={{
@@ -273,13 +275,28 @@ const ECDescargasEPage = () => {
 
             {/* Soporte */}
             <Grid item xs={4}>
+              {/* Campo para ingresar el enlace de Google Drive solo si no se ha subido un archivo */}
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Enlace Google Drive"
+                value={row.enlaceDrive ?? ''}
+                onChange={(e) => {
+                  const updatedRows = [...rows];
+                  updatedRows[index].enlaceDrive = e.target.value;
+                  updatedRows[index].soporte = null; // Si se ingresa un enlace, se elimina el archivo
+                  setRows(updatedRows);
+                }}
+                disabled={row.soporte !== null} // Deshabilitar el campo si ya hay un archivo
+              />
               <Button
                 variant="outlined"
                 component="label"
                 fullWidth
-                style={{ textTransform: 'none' }}
+                style={{ textTransform: 'none', marginTop: '8px' }}
+                disabled={row.enlaceDrive !== ''} // Deshabilitar si ya hay un enlace
               >
-                Soporte
+                Subir Archivo
                 <input
                   type="file"
                   accept=".pdf"
@@ -289,6 +306,7 @@ const ECDescargasEPage = () => {
                     if (file) {
                       const updatedRows = [...rows];
                       updatedRows[index].soporte = file;
+                      updatedRows[index].enlaceDrive = ''; // Si se sube un archivo, se elimina el enlace
                       setRows(updatedRows);
                     }
                   }}
@@ -304,13 +322,11 @@ const ECDescargasEPage = () => {
         ))}
 
         {/* Botones de acción */}
-        <Grid container spacing={2} style={{ marginTop: '16px' }}>
-          <Grid container spacing={2} style={{ marginTop: '16px' }} justifyContent="center">
-            <Grid item xs={12} sm={6}>
-              <Button variant="contained" color="success" fullWidth onClick={handleFinalizar} disabled={!isFormValid()}>
-                Finalizar
-              </Button>
-            </Grid>
+        <Grid container spacing={2} style={{ marginTop: '16px' }} justifyContent="center">
+          <Grid item xs={12} sm={6}>
+            <Button variant="contained" color="success" fullWidth onClick={handleFinalizar} disabled={!isFormValid()}>
+              Finalizar
+            </Button>
           </Grid>
         </Grid>
       </Grid>

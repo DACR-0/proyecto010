@@ -3,7 +3,8 @@ import { pool } from '@/utils/db';
 export async function GET(request) {
   try {
     const [rows] = await pool.query(`
-      SELECT 
+      SELECT  da.id_da,
+        da.id_profesor,
         p.nombre AS nombre_profesor, 
         fa.nombre_cargo, 
         fa.porcentaje, 

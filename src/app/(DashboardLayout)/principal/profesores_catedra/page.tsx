@@ -1,21 +1,23 @@
 'use client'; // Marca el archivo como un Componente del Cliente
 
 import { useEffect, useState } from 'react';
-import { IconDownload } from '@tabler/icons-react';
-import { Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Grid, Button, Box } from '@mui/material';
+import { IconDownload, IconSearch } from '@tabler/icons-react';
+import { Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Grid, Button, Box, TextField, InputAdornment, } from '@mui/material';
 import * as XLSX from 'xlsx'; // Importa la librería xlsx
 
 interface Profesor {
-  Identificación: string;
-  DOCENTE: string;
+  identificacion: string;
+  docente: string;
   total_horas: string;
   factultad_adscripcion: string;
 }
 
-const ProfesoresPage: React.FC = () => {
+const ProfesorescPage: React.FC = () => {
   const [profesores, setProfesores] = useState<Profesor[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  // Estados para los filtros
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   useEffect(() => {
     const fetchProfesores = async () => {
@@ -33,7 +35,6 @@ const ProfesoresPage: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchProfesores();
   }, []);
 
@@ -59,19 +60,47 @@ const ProfesoresPage: React.FC = () => {
     );
   }
 
+  // Filtrar los profesores según los filtros aplicados
+  const filteredProfesores = profesores.filter((profesor) => {
+    const matchesSearchTerm = profesor.docente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profesor.factultad_adscripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profesor.identificacion.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesSearchTerm
+  });
+
   return (
     <div>
       <Typography variant="h3" sx={{ color: (theme) => theme.palette.primary.main }} gutterBottom>
         <center>PROFESORES</center>
       </Typography>
-
-      {/* Botón de exportar */}
-      <Button variant="contained" color="primary" onClick={exportToExcel} sx={{ mb: 2 }}>
-        Exportar
-        <Box sx={{ ml: 1 }}>
-          <IconDownload />
-        </Box>
-      </Button>
+      <Grid container sx={{ mb: 2 }} alignItems="center" justifyContent="space-between">
+        <Grid item xs={12} sm={10}>
+          <TextField
+            fullWidth
+            label="Buscar por nombre, programa o documento"
+            variant="outlined"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <IconSearch/>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Grid>
+        <Grid item>
+          {/* Botón de exportar */}
+          <Button variant="contained" color="primary" onClick={exportToExcel}>
+            Exportar
+            <Box sx={{ ml: 1 }}>
+              <IconDownload />
+            </Box>
+          </Button>
+        </Grid>
+      </Grid>
 
       {/* Tabla de Profesores */}
       <TableContainer component={Paper}>
@@ -85,11 +114,19 @@ const ProfesoresPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {profesores.map((profesor) => (
-              <TableRow key={profesor.Identificación} sx={{ '&:hover': { backgroundColor: '#d3d4d5', cursor: 'pointer' } }}>
+            {filteredProfesores.map((profesor) => (
+              <TableRow
+                key={profesor.identificacion}
+                sx={{
+                  '&:hover': {
+                    backgroundColor: '#d3d4d5',
+                    cursor: 'pointer',
+                  },
+                }}
+              >
                 <TableCell>{profesor.factultad_adscripcion}</TableCell>
-                <TableCell>{profesor.Identificación}</TableCell>
-                <TableCell>{profesor.DOCENTE}</TableCell>
+                <TableCell>{profesor.identificacion}</TableCell>
+                <TableCell>{profesor.docente}</TableCell>
                 <TableCell>{profesor.total_horas}</TableCell>
               </TableRow>
             ))}
@@ -100,4 +137,4 @@ const ProfesoresPage: React.FC = () => {
   );
 };
 
-export default ProfesoresPage;
+export default ProfesorescPage;

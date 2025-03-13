@@ -2,7 +2,7 @@ import { pool } from '@/utils/db';
 
 export async function GET(request) {
   try {
-    const [rows] = await pool.query(`SELECT 
+    const [rows] = await pool.query(`SELECT sa.idsituacion_admin ,sa.id_profesor,
 p.nombre AS nombre_profesor, 
 sad.nombre AS nombre_sa, 
 DATE_FORMAT(sa.fecha_inicio, '%Y-%m-%d') AS fecha_inicio_str,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { IconDownload } from '@tabler/icons-react';
+import { IconDownload, IconSearch } from '@tabler/icons-react';
 import { Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Grid, TextField, InputAdornment, MenuItem, Select, FormControl, InputLabel, Button, Box } from '@mui/material';
 import * as XLSX from 'xlsx'; // Importa la librería xlsx
 
@@ -78,7 +78,6 @@ const ProfesoresPage: React.FC = () => {
     }
   };
 
-
   if (error) {
     return <Typography color="error">{error}</Typography>;
   }
@@ -132,7 +131,7 @@ const ProfesoresPage: React.FC = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  🔍
+                  <IconSearch/>
                 </InputAdornment>
               ),
             }}

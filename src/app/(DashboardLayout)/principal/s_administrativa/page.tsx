@@ -6,13 +6,16 @@ import {
     TableBody, TableCell,
     TableContainer, TableHead,
     TableRow, Paper, CircularProgress,
-    Grid, TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle
+    Grid, TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, CardContent
 } from '@mui/material';
-import { IconEdit, IconPlus, IconRefresh } from '@tabler/icons-react';
-import ECSituacionesA from './ec_s_a'
+import { IconEdit, IconPlus, IconRefresh, IconSearch, IconEye, IconTrash, IconInfoCircle } from '@tabler/icons-react';
+import ECSituacionesA from './ec_s_a';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
+import BlankCard from '@/app/(DashboardLayout)/components/shared/BlankCard';
 
 interface Situaciones {
+    idsituacion_admin: number;
+    id_profesor: string;
     nombre_profesor: string;
     nombre_sa: string;
     fecha_inicio_str: string;
@@ -24,6 +27,7 @@ const SituacionesAPage: React.FC = () => {
     const [situaciones, setSituaciones] = useState<Situaciones[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState<string>(''); // Estado para el término de búsqueda
 
     const [openDialog, setOpenDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal
     const [openDialog2, setOpenDialog2] = useState<boolean>(false);
@@ -49,6 +53,16 @@ const SituacionesAPage: React.FC = () => {
         fetchSituaciones();
     }, []);
 
+    // Filtrar las situaciones basadas en el término de búsqueda
+    const filteredSituaciones = situaciones.filter((situacion) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            situacion.id_profesor.toLowerCase().includes(searchLower) ||
+            situacion.nombre_profesor.toLowerCase().includes(searchLower) ||
+            situacion.nombre_sa.toLowerCase().includes(searchLower)
+        );
+    });
+
     if (error) {
         return <Typography color="error">{error}</Typography>;
     }
@@ -63,6 +77,7 @@ const SituacionesAPage: React.FC = () => {
             </Grid>
         );
     }
+
     const handleOpenDialog = () => {
         setOpenDialog(true); // Abre el modal
     };
@@ -81,7 +96,6 @@ const SituacionesAPage: React.FC = () => {
 
     return (
         <div>
-
             <DashboardCard>
                 <div>
                     <Typography variant="h3" sx={{ color: (theme) => theme.palette.primary.main }} gutterBottom>
@@ -113,11 +127,9 @@ const SituacionesAPage: React.FC = () => {
             </DashboardCard>
 
             {/* Dialog Modal */}
-            <Dialog open={openDialog} onClose={handleCloseDialog}>
+            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="xl">
                 <DialogContent>
-                    {/* Aquí insertas el formulario de ec_d_a <ECDescargasA />*/
-                        <ECSituacionesA />
-                    }
+                    <ECSituacionesA />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialog} color="primary">
@@ -125,35 +137,90 @@ const SituacionesAPage: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            {/* Dialog Modal2 */}
-            <Dialog open={openDialog2} onClose={handleCloseDialog2}>
-                <DialogTitle>Editar Situaciones Administrativas</DialogTitle>
-                <DialogContent>
-                    {/* Aquí insertas el formulario de ec_d_a <ECDescargasA /> */}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog2} color="primary">
-                        Cancelar
-                    </Button>
-                </DialogActions>
-            </Dialog>
 
+            {/* Dialog Modal2 */}
+      <Dialog open={openDialog2} onClose={handleCloseDialog2}>
+        <DialogTitle><IconInfoCircle /></DialogTitle>
+        <DialogContent>
+          {/* Aquí insertas el formulario de para editar <DAedit> */}
+          <BlankCard>
+            <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  color: (theme) => theme.palette.error.main,
+                  mb: 2, // Añadir espacio debajo del título
+                }}
+              >
+                Advertencia
+              </Typography>
+              <Typography
+                variant="body1"
+                color="text.primary"
+                sx={{
+                  mb: 3, // Añadir espacio debajo del texto
+                  textAlign: 'justify', // Justificar el texto
+                  width: '100%', // Asegurar que el texto ocupe todo el espacio disponible
+                }}
+              >
+                ¿Está seguro de que desea eliminar este registro? Tenga en cuenta que esta acción es permanente y no se podrá recuperar.
+              </Typography>
+
+              <Button
+                variant="contained"
+                color="error"
+                sx={{
+                  mt: 2, // Añadir espacio encima del botón
+                  textAlign: 'center', // Centrar el texto del botón
+                }}
+              >
+                Eliminar
+              </Button>
+            </CardContent>
+          </BlankCard>
+
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog2} color="primary">
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+            <div>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Buscar por Documento, Profesor o Situación"
+                        variant="outlined"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <IconSearch />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
+                </Grid>
+            </div>
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
                         <TableRow>
+                            <TableCell align="center"><Typography variant="h6">Documento</Typography></TableCell>
                             <TableCell align="center"><Typography variant="h6">Profesor</Typography></TableCell>
-                            <TableCell align="center"><Typography variant="h6">Situacíon administrativa</Typography></TableCell>
+                            <TableCell align="center"><Typography variant="h6">Situación Administrativa</Typography></TableCell>
                             <TableCell align="center"><Typography variant="h6">Fecha de inicio</Typography></TableCell>
                             <TableCell align="center"><Typography variant="h6">Fecha de fin</Typography></TableCell>
                             <TableCell align="center"><Typography variant="h6">Ver Soporte</Typography></TableCell>
-                            <TableCell align="center"><Typography variant="h6">Editar Situacion</Typography></TableCell>
+                            <TableCell align="center"><Typography variant="h6">Editar Situación</Typography></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {situaciones.map((situacion, index) => (
+                        {filteredSituaciones.map((situacion) => (
                             <TableRow
-                                key={index}
+                                key={situacion.idsituacion_admin}
                                 sx={{
                                     '&:hover': {
                                         backgroundColor: '#d3d4d5', // Cambia el color de fondo al pasar el mouse
@@ -161,49 +228,68 @@ const SituacionesAPage: React.FC = () => {
                                     },
                                 }}
                             >
+                                <TableCell>{situacion.id_profesor}</TableCell>
                                 <TableCell>{situacion.nombre_profesor}</TableCell>
                                 <TableCell>{situacion.nombre_sa}</TableCell>
                                 <TableCell>{situacion.fecha_inicio_str}</TableCell>
-                                <TableCell>{situacion.fecha_fin_str}</TableCell> {/* Aquí usa fecha_fin_str */}
+                                <TableCell>{situacion.fecha_fin_str}</TableCell>
                                 <TableCell align="center">
                                     {situacion.soporte ? (
-                                        <button
+                                        <Button
                                             style={{
                                                 backgroundColor: '#1976d2',
                                                 color: 'white',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                padding: '5px 10px',
-                                                cursor: 'pointer',
                                             }}
+                                            variant="contained"
+                                            startIcon={<IconEye />}
                                             onClick={() => {
                                                 if (!situacion.soporte) return; // Evita errores si es null o undefined
                                                 const soporteFileName = situacion.soporte; // Extrae el nombre del archivo
                                                 if (!soporteFileName) return; // Si sigue vacío, no hace nada
-                                                const fileUrl = `http://localhost:4000/uploads/${encodeURIComponent(soporteFileName)}`;
-                                                window.open(fileUrl, '_blank'); // Abre en nueva pestaña
+
+                                                // Verifica si el soporte es un archivo local o un enlace de Google Drive
+                                                if (soporteFileName.startsWith('file')) {
+                                                    // Si es un archivo local, crea la URL para acceder a él
+                                                    const fileUrl = `http://localhost:4000/uploads/${encodeURIComponent(soporteFileName)}`;
+                                                    window.open(fileUrl, '_blank'); // Abre en nueva pestaña
+                                                } else if (soporteFileName.includes('drive.google.com')) {
+                                                    // Si es un enlace de Google Drive, abre el enlace directamente
+                                                    window.open(soporteFileName, '_blank');
+                                                } else {
+                                                    // En caso de que no sea ninguno de los dos, podrías manejarlo aquí
+                                                    alert('Tipo de archivo o enlace no soportado');
+                                                }
                                             }}
                                         >
-                                            Ver Soporte
-                                        </button>
+                                            Ver
+                                        </Button>
                                     ) : (
                                         'No disponible'
                                     )}
                                 </TableCell>
                                 <TableCell align="center">
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={handleOpenDialog2}
-                                        startIcon={<IconEdit />} // Aquí se coloca el ícono
-                                    >
-                                        Editar
-                                    </Button>
+                                    <div style={{ display: 'flex', gap: '8px' }}> {/* Contenedor flex para los botones */}
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={handleOpenDialog2}
+                                        >
+                                            <IconEdit />
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            onClick={handleOpenDialog2}
+                                            //startIcon={<IconTrash />}
+                                        >
+                                            <IconTrash />
+                                        </Button>
+                                    </div>
                                 </TableCell>
+
                             </TableRow>
                         ))}
                     </TableBody>
-
                 </Table>
             </TableContainer>
         </div>

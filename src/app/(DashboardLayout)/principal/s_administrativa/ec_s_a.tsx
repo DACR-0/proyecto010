@@ -12,7 +12,7 @@ interface Situaciones {
 interface Row {
   id: number;
   cargo: number | null;
-  soporte: File | null;
+  soporte: File | string | null; // soporte puede ser un archivo o un enlace
   fecha_inicio: string | null;
   fecha_fin: string | null;
 }
@@ -111,6 +111,9 @@ const ECSituacionesAPage = () => {
               alert('Error al subir archivo: ' + (error as Error).message);
               return row; // Devolver la fila original sin modificar
             }
+          } else if (typeof row.soporte === 'string') {
+            // Si es un enlace de Google Drive, no hacemos nada y solo lo guardamos
+            return { ...row, soporte: row.soporte };
           }
           return row;
         })
@@ -196,22 +199,22 @@ const ECSituacionesAPage = () => {
 
         {/* Encabezados */}
         <Grid container spacing={2} style={{ marginTop: '16px', marginBottom: '16px' }}>
-          <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
+          <Grid item xs={3}>
             <Typography variant="h6" align="center">
               Situación Administrativa
             </Typography>
           </Grid>
-          <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
+          <Grid item xs={3}>
             <Typography variant="h6" align="center">
               Fecha de inicio
             </Typography>
           </Grid>
-          <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
+          <Grid item xs={3}>
             <Typography variant="h6" align="center">
               Fecha de fin
             </Typography>
           </Grid>
-          <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
+          <Grid item xs={3}>
             <Typography variant="h6" align="center">
               Soporte de Descarga
             </Typography>
@@ -222,7 +225,7 @@ const ECSituacionesAPage = () => {
         {rows.map((row, index) => (
           <Grid container spacing={2} key={row.id} alignItems="center" style={{ marginTop: '2px', marginBottom: '2px' }}>
             {/* Situación Administrativa */}
-            <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
+            <Grid item xs={3}>
               <TextField
                 fullWidth
                 select
@@ -245,7 +248,7 @@ const ECSituacionesAPage = () => {
             </Grid>
 
             {/* Fecha Inicio */}
-            <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
+            <Grid item xs={3}>
               <TextField
                 fullWidth
                 label="Fecha Inicio"
@@ -261,7 +264,7 @@ const ECSituacionesAPage = () => {
             </Grid>
 
             {/* Fecha Fin */}
-            <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
+            <Grid item xs={3}>
               <TextField
                 fullWidth
                 label="Fecha Fin"
@@ -277,7 +280,19 @@ const ECSituacionesAPage = () => {
             </Grid>
 
             {/* Soporte */}
-            <Grid item xs={3}> {/* Cambié de xs={4} a xs={3} */}
+            <Grid item xs={3}>
+              <TextField
+                fullWidth
+                label="Enlace de Google Drive"
+                variant="outlined"
+                value={typeof row.soporte === 'string' ? row.soporte : ''}
+                onChange={(e) => {
+                  const updatedRows = [...rows];
+                  updatedRows[index].soporte = e.target.value;
+                  setRows(updatedRows);
+                }}
+                style={{ marginBottom: '8px' }}
+              />
               <Button
                 variant="outlined"
                 component="label"
@@ -299,7 +314,7 @@ const ECSituacionesAPage = () => {
                   }}
                 />
               </Button>
-              {row.soporte && (
+              {row.soporte && typeof row.soporte !== 'string' && (
                 <Typography variant="body2" style={{ marginTop: '8px', textAlign: 'center' }}>
                   {row.soporte.name}
                 </Typography>
@@ -307,7 +322,6 @@ const ECSituacionesAPage = () => {
             </Grid>
           </Grid>
         ))}
-
 
         {/* Botones de acción */}
         <Grid container spacing={2} style={{ marginTop: '16px' }}>

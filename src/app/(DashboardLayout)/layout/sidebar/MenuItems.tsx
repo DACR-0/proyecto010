@@ -59,20 +59,13 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: "EXTENCION",
+    title: "EXTENSION",
     icon: IconArrowBadgeRight,
     href: "/principal/descargas_exten",
   },
-  
   {
     id: uniqueId(),
-    title: "Crear-Editar Descarga",
-    icon: IconArrowBadgeRight,
-    href: "/principal/ec_descarga",
-  },
-  {
-    id: uniqueId(),
-    title: "Asignaturas",
+    title: "ASIGNATURAS",
     icon: IconArrowBadgeRight,
     href: "/principal/programacion",
   },

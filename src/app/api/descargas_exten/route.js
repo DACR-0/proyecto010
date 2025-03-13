@@ -2,7 +2,7 @@ import { pool } from '@/utils/db';
 
 export async function GET(request) {
   try {
-    const [rows] = await pool.query(`SELECT 
+    const [rows] = await pool.query(`SELECT de.id_de,de.id_profesor,
 p.nombre AS nombre_profesor, fe.nombre_fe, de.porcentaje, de.soporte AS soporte
 FROM proyecto010.descarga_extencion de
 JOIN proyecto010.profesores p ON de.id_profesor = p.numero_doc

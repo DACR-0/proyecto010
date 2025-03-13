@@ -5,14 +5,18 @@ import {
   Typography, Table,
   TableBody, TableCell,
   TableContainer, TableHead,
-  TableRow, Paper,CircularProgress ,
-  Grid, TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle
+  TableRow, Paper, CircularProgress,
+  Grid, TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, CardContent
 } from '@mui/material';
-import { IconEdit, IconPlus, IconRefresh } from '@tabler/icons-react';
-import ECDescargasA from './ec_d_a'
+import { IconEdit, IconPlus, IconRefresh, IconEye, IconSearch, IconDownload, IconTrash, IconInfoCircle } from '@tabler/icons-react';
+import ECDescargasA from './ec_d_a';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
+import * as XLSX from 'xlsx'; // Importa la librería xlsx
+import BlankCard from '@/app/(DashboardLayout)/components/shared/BlankCard';
 
 interface Descarga {
+  id_da: number;
+  id_profesor: string;
   nombre_profesor: string;
   nombre_cargo: string;
   porcentaje: number;
@@ -21,8 +25,10 @@ interface Descarga {
 
 const DescargasAPage: React.FC = () => {
   const [descargas, setDescargas] = useState<Descarga[]>([]);
+  const [filteredDescargas, setFilteredDescargas] = useState<Descarga[]>([]); // Nuevo estado para las descargas filtradas
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>(''); // Nuevo estado para el término de búsqueda
 
   const [openDialog, setOpenDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal
   const [openDialog2, setOpenDialog2] = useState<boolean>(false);
@@ -36,6 +42,7 @@ const DescargasAPage: React.FC = () => {
         }
         const data = await response.json();
         setDescargas(data);
+        setFilteredDescargas(data); // Inicializa las descargas filtradas
       } catch (error) {
         console.error(error);
         setError('Hubo un problema al cargar los datos.');
@@ -46,6 +53,23 @@ const DescargasAPage: React.FC = () => {
 
     fetchDescargas();
   }, []);
+
+  useEffect(() => {
+    if (searchTerm) {
+      // Filtra las descargas por id_profesor o nombre_profesor
+      setFilteredDescargas(
+        descargas.filter(
+          (descarga) =>
+            descarga.id_profesor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            descarga.nombre_profesor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            descarga.nombre_cargo.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    } else {
+      // Si no hay término de búsqueda, muestra todas las descargas
+      setFilteredDescargas(descargas);
+    }
+  }, [searchTerm, descargas]);
 
   if (error) {
     return <Typography color="error">{error}</Typography>;
@@ -61,7 +85,6 @@ const DescargasAPage: React.FC = () => {
       </Grid>
     );
   }
-  
 
   const handleOpenDialog = () => {
     setOpenDialog(true); // Abre el modal
@@ -79,7 +102,13 @@ const DescargasAPage: React.FC = () => {
   const handleRefresh = () => {
     window.location.reload(); // Recargar la página actual para volver a cargar las tablas
   };
-
+  // Función para exportar los datos a Excel
+  const exportToExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(filteredDescargas); // Convierte los datos a formato Excel
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Profesores'); // Crea un libro de trabajo con la hoja "Profesores"
+    XLSX.writeFile(wb, 'Profesores.xlsx'); // Descarga el archivo Excel
+  };
   return (
     <div>
       <DashboardCard>
@@ -104,8 +133,15 @@ const DescargasAPage: React.FC = () => {
                 variant="contained"
                 startIcon={<IconRefresh />}
                 onClick={handleRefresh}
+                style={{ marginRight: '16px' }} // Espacio entre los botones
               >
                 Actualizar
+              </Button>
+              {/* Botón de exportar */}
+              <Button variant="contained"
+                startIcon={<IconDownload />}
+                color="primary" onClick={exportToExcel}>
+                Exportar
               </Button>
             </Grid>
           </Grid>
@@ -115,9 +151,7 @@ const DescargasAPage: React.FC = () => {
       {/* Dialog Modal */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogContent>
-           {/* Aquí insertas el formulario de ec_d_a <ECDescargasA />*/
-           <ECDescargasA />
-           }
+          <ECDescargasA />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color="primary">
@@ -125,23 +159,82 @@ const DescargasAPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
       {/* Dialog Modal2 */}
       <Dialog open={openDialog2} onClose={handleCloseDialog2}>
-        <DialogTitle>Editar Descargas Académicas</DialogTitle>
+        <DialogTitle><IconInfoCircle /></DialogTitle>
         <DialogContent>
-          {/* Aquí insertas el formulario de ec_d_a <ECDescargasA /> */}
+          {/* Aquí insertas el formulario de para editar <DAedit> */}
+          <BlankCard>
+            <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  color: (theme) => theme.palette.error.main,
+                  mb: 2, // Añadir espacio debajo del título
+                }}
+              >
+                Advertencia
+              </Typography>
+
+              <Typography
+                variant="body1"
+                color="text.primary"
+                sx={{
+                  mb: 3, // Añadir espacio debajo del texto
+                  textAlign: 'justify', // Justificar el texto
+                  width: '100%', // Asegurar que el texto ocupe todo el espacio disponible
+                }}
+              >
+                ¿Está seguro de que desea eliminar este registro? Tenga en cuenta que esta acción es permanente y no se podrá recuperar.
+              </Typography>
+
+              <Button
+                variant="contained"
+                color="error"
+                sx={{
+                  mt: 2, // Añadir espacio encima del botón
+                  textAlign: 'center', // Centrar el texto del botón
+                }}
+              >
+                Eliminar
+              </Button>
+            </CardContent>
+          </BlankCard>
+
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog2} color="primary">
-            Cancelar
+            Cerrar
           </Button>
         </DialogActions>
       </Dialog>
-
+      <div>
+        <Grid item xs={12} sm={10}>
+          {/* Buscador */}
+          <TextField
+            fullWidth
+            label="Buscar por Documento o Nombre de Profesor"
+            variant="outlined"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <IconSearch />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Grid>
+      </div>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell align="center">
+                <Typography variant="h6">Documento</Typography>
+              </TableCell>
               <TableCell align="center">
                 <Typography variant="h6">Nombre del Profesor</Typography>
               </TableCell>
@@ -160,58 +253,78 @@ const DescargasAPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {descargas.map((descarga, index) => (
-              <TableRow
-                key={index}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: '#f5f5f5',
-                    cursor: 'pointer',
-                  },
-                }}
-              >
-                <TableCell align="center">{descarga.nombre_profesor}</TableCell>
-                <TableCell align="center">{descarga.nombre_cargo}</TableCell>
-                <TableCell align="center">{descarga.porcentaje}%</TableCell>
-                <TableCell align="center">
-                  {descarga.soporte ? (
-                    <button
-                      style={{
-                        backgroundColor: '#1976d2',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '5px 10px',
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => {
-                        if (!descarga.soporte) return; // Evita errores si es null o undefined
-                        const soporteFileName = descarga.soporte; // Extrae el nombre del archivo
-                        if (!soporteFileName) return; // Si sigue vacío, no hace nada
-                        const fileUrl = `http://localhost:4000/uploads/${encodeURIComponent(soporteFileName)}`;
-                        window.open(fileUrl, '_blank'); // Abre en nueva pestaña
-                      }}
-                      
-                    >
-                      Ver Soporte
-                    </button>
-                  ) : (
-                    'No disponible'
-                  )}
-                </TableCell>
-                <TableCell align="center">
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleOpenDialog2}
-                    startIcon={<IconEdit />} // Aquí se coloca el ícono
-                  >
-                    Editar
-                  </Button>
+            {filteredDescargas.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  <Typography variant="h6" color="textSecondary">
+                    No se encontraron resultados
+                  </Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredDescargas.map((descarga) => (
+                <TableRow
+                  key={descarga.id_da}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: '#f5f5f5',
+                      cursor: 'pointer',
+                    },
+                  }}
+                >
+                  <TableCell align="center">{descarga.id_profesor}</TableCell>
+                  <TableCell align="center">{descarga.nombre_profesor}</TableCell>
+                  <TableCell align="center">{descarga.nombre_cargo}</TableCell>
+                  <TableCell align="center">{descarga.porcentaje}%</TableCell>
+                  <TableCell align="center">
+                    {descarga.soporte ? (
+                      <Button
+                        style={{
+                          backgroundColor: '#1976d2',
+                          color: 'white',
+                        }}
+                        variant="contained"
+                        startIcon={<IconEye />}
+                        onClick={() => {
+                          if (!descarga.soporte) return; // Evita errores si es null o undefined
+                          const soporteFileName = descarga.soporte; // Extrae el nombre del archivo
+                          if (!soporteFileName) return; // Si sigue vacío, no hace nada
+
+                          // Verifica si el soporte es un archivo local o un enlace de Google Drive
+                          if (soporteFileName.startsWith('file')) {
+                            // Si es un archivo local, crea la URL para acceder a él
+                            const fileUrl = `http://localhost:4000/uploads/${encodeURIComponent(soporteFileName)}`;
+                            window.open(fileUrl, '_blank'); // Abre en nueva pestaña
+                          } else if (soporteFileName.includes('drive.google.com')) {
+                            // Si es un enlace de Google Drive, abre el enlace directamente
+                            window.open(soporteFileName, '_blank');
+                          } else {
+                            // En caso de que no sea ninguno de los dos, podrías manejarlo aquí
+                            alert('Tipo de archivo o enlace no soportado');
+                          }
+                        }}
+                      >
+                        Ver
+                      </Button>
+                    ) : (
+                      'No disponible'
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={handleOpenDialog2}
+                      startIcon={<IconTrash />}
+                    >
+                      Eliminar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
+
         </Table>
       </TableContainer>
     </div>
