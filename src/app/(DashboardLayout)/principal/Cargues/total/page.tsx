@@ -2,19 +2,16 @@
 import { Typography } from '@mui/material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
+import Image from "next/image";
 
-const SamplePage = () => {
+const CargueTPage = () => {
   return (
-    <PageContainer title="Sample Page" description="this is Sample page">
-      <DashboardCard title="Cargue Total">
-        <Typography>HOLA MUNDO</Typography>
-      </DashboardCard>
-      <DashboardCard title="Cargue Incremental">
+    <PageContainer title="">
+      <DashboardCard title="Sample Page">
         <Typography>HOLA MUNDO</Typography>
       </DashboardCard>
     </PageContainer>
   );
 };
 
-export default SamplePage;
-
+export default CargueTPage;

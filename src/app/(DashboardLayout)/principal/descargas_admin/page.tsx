@@ -10,9 +10,10 @@ import {
 } from '@mui/material';
 import { IconEdit, IconPlus, IconRefresh, IconEye, IconSearch, IconDownload, IconTrash, IconInfoCircle } from '@tabler/icons-react';
 import ECDescargasA from './ec_d_a';
+import EditarA from './edit';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
-import * as XLSX from 'xlsx'; // Importa la librería xlsx
 import BlankCard from '@/app/(DashboardLayout)/components/shared/BlankCard';
+import * as XLSX from 'xlsx'; // Importa la librería xlsx
 
 interface Descarga {
   id_da: number;
@@ -32,6 +33,9 @@ const DescargasAPage: React.FC = () => {
 
   const [openDialog, setOpenDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal
   const [openDialog2, setOpenDialog2] = useState<boolean>(false);
+  const [selectedDescarga, setSelectedDescarga] = useState<Descarga | null>(null); // Estado para almacenar la descarga seleccionada
+  const [selectedDescargaForEdit, setSelectedDescargaForEdit] = useState<Descarga | null>(null); // Estado para manejar la descarga seleccionada para editar
+  const [openEditDialog, setOpenEditDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal de edición
 
   useEffect(() => {
     const fetchDescargas = async () => {
@@ -89,8 +93,9 @@ const DescargasAPage: React.FC = () => {
   const handleOpenDialog = () => {
     setOpenDialog(true); // Abre el modal
   };
-  const handleOpenDialog2 = () => {
-    setOpenDialog2(true); // Abre el modal
+  const handleOpenDialog2 = (descarga: Descarga) => {
+    setSelectedDescarga(descarga); // Establece el registro a eliminar
+    setOpenDialog2(true);
   };
 
   const handleCloseDialog = () => {
@@ -102,6 +107,15 @@ const DescargasAPage: React.FC = () => {
   const handleRefresh = () => {
     window.location.reload(); // Recargar la página actual para volver a cargar las tablas
   };
+  const handleOpenEditDialog = (descarga: Descarga) => {
+    setSelectedDescargaForEdit(descarga); // Establece la descarga seleccionada para editar
+    setOpenEditDialog(true); // Abre el modal de edición
+  };
+
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false); // Cierra el modal de edición
+  };
+
   // Función para exportar los datos a Excel
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(filteredDescargas); // Convierte los datos a formato Excel
@@ -109,6 +123,32 @@ const DescargasAPage: React.FC = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Profesores'); // Crea un libro de trabajo con la hoja "Profesores"
     XLSX.writeFile(wb, 'Profesores.xlsx'); // Descarga el archivo Excel
   };
+  // hacer la solicitud DELETE a la AP
+  const handleDelete = async () => {
+    if (selectedDescarga) {
+      try {
+        const response = await fetch('/api/descargas_admin/eliminar', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_da: selectedDescarga.id_da }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al eliminar el registro');
+        }
+
+        // Elimina la descarga de la lista local
+        setDescargas((prev) => prev.filter((descarga) => descarga.id_da !== selectedDescarga.id_da));
+        setFilteredDescargas((prev) => prev.filter((descarga) => descarga.id_da !== selectedDescarga.id_da));
+        alert('Registro eliminado correctamente');
+        handleCloseDialog2(); // Cierra el modal
+      } catch (error) {
+        console.error(error);
+        setError('Hubo un problema al eliminar el registro.');
+      }
+    }
+  };
+
   return (
     <div>
       <DashboardCard>
@@ -160,52 +200,51 @@ const DescargasAPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog Modal2 */}
+      {/* Dialog Modal 2 */}
       <Dialog open={openDialog2} onClose={handleCloseDialog2}>
         <DialogTitle><IconInfoCircle /></DialogTitle>
         <DialogContent>
-          {/* Aquí insertas el formulario de para editar <DAedit> */}
           <BlankCard>
             <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-              <Typography
-                variant="h5"
-                sx={{
-                  color: (theme) => theme.palette.error.main,
-                  mb: 2, // Añadir espacio debajo del título
-                }}
-              >
+              <Typography variant="h5" sx={{ color: (theme) => theme.palette.error.main, mb: 2 }}>
                 Advertencia
               </Typography>
-
-              <Typography
-                variant="body1"
-                color="text.primary"
-                sx={{
-                  mb: 3, // Añadir espacio debajo del texto
-                  textAlign: 'justify', // Justificar el texto
-                  width: '100%', // Asegurar que el texto ocupe todo el espacio disponible
-                }}
-              >
+              <Typography variant="body1" sx={{ mb: 3, textAlign: 'justify', width: '100%' }}>
                 ¿Está seguro de que desea eliminar este registro? Tenga en cuenta que esta acción es permanente y no se podrá recuperar.
               </Typography>
-
               <Button
                 variant="contained"
                 color="error"
-                sx={{
-                  mt: 2, // Añadir espacio encima del botón
-                  textAlign: 'center', // Centrar el texto del botón
-                }}
+                sx={{ mt: 2 }}
+                onClick={handleDelete} // Llama a la función de eliminación
               >
                 Eliminar
               </Button>
             </CardContent>
           </BlankCard>
-
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog2} color="primary">
             Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/*modal 3*/}
+      {/* Modal de edición */}
+      <Dialog open={openEditDialog} onClose={handleCloseEditDialog}>
+        <DialogTitle>Editar Descarga Académica</DialogTitle>
+        <DialogContent>
+          {/* Pasa el idDescarga y la función onClose como prop */}
+          {selectedDescargaForEdit && (
+            <EditarA
+              idDescarga={String(selectedDescargaForEdit.id_da)}
+              onClose={handleCloseEditDialog} // Pasa la función para cerrar el modal
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditDialog} color="primary">
+            Cancelar
           </Button>
         </DialogActions>
       </Dialog>
@@ -248,7 +287,10 @@ const DescargasAPage: React.FC = () => {
                 <Typography variant="h6">Ver Soporte</Typography>
               </TableCell>
               <TableCell align="center">
-                <Typography variant="h6">Editar descarga</Typography>
+                <Typography variant="h6">Editar</Typography>
+              </TableCell>
+              <TableCell align="center">
+                <Typography variant="h6">Eliminar descarga</Typography>
               </TableCell>
             </TableRow>
           </TableHead>
@@ -313,12 +355,23 @@ const DescargasAPage: React.FC = () => {
                   <TableCell align="center">
                     <Button
                       variant="contained"
+                      color="primary"
+                      startIcon={<IconEdit />}
+                      onClick={() => handleOpenEditDialog(descarga)} // Acción al hacer clic en editar
+                    >
+                      Editar
+                    </Button>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="contained"
                       color="error"
-                      onClick={handleOpenDialog2}
+                      onClick={() => handleOpenDialog2(descarga)} // Pasa el registro seleccionado
                       startIcon={<IconTrash />}
                     >
                       Eliminar
                     </Button>
+
                   </TableCell>
                 </TableRow>
               ))

@@ -114,9 +114,9 @@ const ProfesorescPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredProfesores.map((profesor) => (
+            {filteredProfesores.map((profesor, index) => (
               <TableRow
-                key={profesor.identificacion}
+                key={index}
                 sx={{
                   '&:hover': {
                     backgroundColor: '#d3d4d5',

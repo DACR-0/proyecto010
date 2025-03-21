@@ -33,6 +33,7 @@ const DescargasIPage: React.FC = () => {
 
   const [openDialog, setOpenDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal
   const [openDialog2, setOpenDialog2] = useState<boolean>(false);
+  const [idToDelete, setIdToDelete] = useState<number | null>(null);  // Estado para guardar el id de la descarga a eliminar
 
   useEffect(() => {
     const fetchDescargas = async () => {
@@ -101,6 +102,32 @@ const DescargasIPage: React.FC = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Profesores'); // Crea un libro de trabajo con la hoja "Profesores"
     XLSX.writeFile(wb, 'Profesores.xlsx'); // Descarga el archivo Excel
   };
+  
+  const handleDelete = async () => {
+      try {
+        // Hacer la solicitud DELETE a la API
+        const response = await fetch('/api/descargas_inves/eliminar', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id_di: idToDelete }),
+        });
+
+        if (!response.ok) {
+          throw new Error('No se pudo eliminar el registro');
+        }
+
+        // Eliminar el registro del estado
+        setDescargas(descargas.filter((descarga) => descarga.id_di !== idToDelete));
+        setOpenDialog2(false);  // Cerrar el modal
+        alert('Registro eliminado correctamente');
+      } catch (error) {
+        console.error('Error al eliminar el registro:', error);
+        alert('Error al eliminar el registro');
+      }
+  };
+
   return (
     <div>
       <DashboardCard>
@@ -156,7 +183,6 @@ const DescargasIPage: React.FC = () => {
       <Dialog open={openDialog2} onClose={handleCloseDialog2}>
         <DialogTitle><IconInfoCircle /></DialogTitle>
         <DialogContent>
-          {/* Aquí insertas el formulario de para editar <DAedit> */}
           <BlankCard>
             <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
               <Typography
@@ -188,12 +214,12 @@ const DescargasIPage: React.FC = () => {
                   mt: 2, // Añadir espacio encima del botón
                   textAlign: 'center', // Centrar el texto del botón
                 }}
+                onClick={handleDelete} // Llama a la función de eliminación
               >
                 Eliminar
               </Button>
             </CardContent>
           </BlankCard>
-
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog2} color="primary">
@@ -232,7 +258,7 @@ const DescargasIPage: React.FC = () => {
               <TableCell align="center"><Typography variant="h6">Fecha de inicio</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Fecha de fin</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Ver Soporte</Typography></TableCell>
-              <TableCell align="center"><Typography variant="h6">Editar descarga</Typography></TableCell>
+              <TableCell align="center"><Typography variant="h6">Eliminar descarga</Typography></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -241,8 +267,8 @@ const DescargasIPage: React.FC = () => {
                 key={descarga.id_di}
                 sx={{
                   '&:hover': {
-                    backgroundColor: '#d3d4d5', // Cambia el color de fondo al pasar el mouse
-                    cursor: 'pointer',          // Cambia el cursor a pointer
+                    backgroundColor: '#d3d4d5',
+                    cursor: 'pointer',
                   },
                 }}
               >
@@ -262,20 +288,16 @@ const DescargasIPage: React.FC = () => {
                       variant="contained"
                       startIcon={<IconEye />}
                       onClick={() => {
-                        if (!descarga.soporte) return; // Evita errores si es null o undefined
-                        const soporteFileName = descarga.soporte; // Extrae el nombre del archivo
-                        if (!soporteFileName) return; // Si sigue vacío, no hace nada
+                        if (!descarga.soporte) return;
+                        const soporteFileName = descarga.soporte;
+                        if (!soporteFileName) return;
 
-                        // Verifica si el soporte es un archivo local o un enlace de Google Drive
                         if (soporteFileName.startsWith('file')) {
-                          // Si es un archivo local, crea la URL para acceder a él
                           const fileUrl = `http://localhost:4000/uploads/${encodeURIComponent(soporteFileName)}`;
-                          window.open(fileUrl, '_blank'); // Abre en nueva pestaña
+                          window.open(fileUrl, '_blank');
                         } else if (soporteFileName.includes('drive.google.com')) {
-                          // Si es un enlace de Google Drive, abre el enlace directamente
                           window.open(soporteFileName, '_blank');
                         } else {
-                          // En caso de que no sea ninguno de los dos, podrías manejarlo aquí
                           alert('Tipo de archivo o enlace no soportado');
                         }
                       }}
@@ -290,7 +312,10 @@ const DescargasIPage: React.FC = () => {
                   <Button
                     variant="contained"
                     color="error"
-                    onClick={handleOpenDialog2}
+                    onClick={() => {
+                      setIdToDelete(descarga.id_di);  // Guardamos el id del registro que se va a eliminar
+                      handleOpenDialog2();             // Abrimos el modal de confirmación
+                    }}
                     startIcon={<IconTrash />}
                   >
                     Eliminar
@@ -299,6 +324,7 @@ const DescargasIPage: React.FC = () => {
               </TableRow>
             ))}
           </TableBody>
+
         </Table>
       </TableContainer>
     </div>

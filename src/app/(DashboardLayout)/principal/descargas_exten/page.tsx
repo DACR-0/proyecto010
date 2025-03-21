@@ -6,9 +6,9 @@ import {
   TableBody, TableCell,
   TableContainer, TableHead,
   TableRow, Paper, CircularProgress,
-  Grid, TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment,CardContent, 
+  Grid, TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, CardContent,
 } from '@mui/material';
-import { IconEdit, IconPlus, IconRefresh, IconEye, IconSearch, IconDownload,IconTrash,IconInfoCircle } from '@tabler/icons-react';
+import { IconEdit, IconPlus, IconRefresh, IconEye, IconSearch, IconDownload, IconTrash, IconInfoCircle } from '@tabler/icons-react';
 import ECDescargasE from './ec_d_e';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import * as XLSX from 'xlsx'; // Importa la librería xlsx
@@ -32,6 +32,8 @@ const DescargasEPage: React.FC = () => {
 
   const [openDialog, setOpenDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal
   const [openDialog2, setOpenDialog2] = useState<boolean>(false);
+  const [selectedDescarga, setSelectedDescarga] = useState<Descarga | null>(null);
+
 
   useEffect(() => {
     const fetchDescargas = async () => {
@@ -89,8 +91,9 @@ const DescargasEPage: React.FC = () => {
   const handleOpenDialog = () => {
     setOpenDialog(true); // Abre el modal
   };
-  const handleOpenDialog2 = () => {
-    setOpenDialog2(true); // Abre el modal
+  const handleOpenDialog2 = (descarga: Descarga) => {
+    setSelectedDescarga(descarga); // Establece el registro a eliminar
+    setOpenDialog2(true);
   };
   const handleCloseDialog = () => {
     setOpenDialog(false); // Cierra el modal
@@ -108,6 +111,32 @@ const DescargasEPage: React.FC = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Profesores'); // Crea un libro de trabajo con la hoja "Profesores"
     XLSX.writeFile(wb, 'Profesores.xlsx'); // Descarga el archivo Excel
   };
+
+  const handleDelete = async () => {
+    if (selectedDescarga) {
+      try {
+        const response = await fetch('/api/descargas_exten/eliminar', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_de: selectedDescarga.id_de }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al eliminar el registro');
+        }
+
+        // Elimina la descarga de la lista local
+        setDescargas((prev) => prev.filter((descarga) => descarga.id_de !== selectedDescarga.id_de));
+        setFilteredDescargas((prev) => prev.filter((descarga) => descarga.id_de !== selectedDescarga.id_de));
+        alert('Registro eliminado correctamente');
+        handleCloseDialog2(); // Cierra el modal
+      } catch (error) {
+        console.error(error);
+        setError('Hubo un problema al eliminar el registro.');
+      }
+    }
+  };
+
   return (
     <div>
       <DashboardCard>
@@ -160,55 +189,35 @@ const DescargasEPage: React.FC = () => {
       </Dialog>
 
       {/* Dialog Modal2 */}
-            <Dialog open={openDialog2} onClose={handleCloseDialog2}>
-              <DialogTitle><IconInfoCircle /></DialogTitle>
-              <DialogContent>
-                {/* Aquí insertas el formulario de para editar <DAedit> */}
-                <BlankCard>
-                  <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        color: (theme) => theme.palette.error.main,
-                        mb: 2, // Añadir espacio debajo del título
-                      }}
-                    >
-                      Advertencia
-                    </Typography>
+      <Dialog open={openDialog2} onClose={handleCloseDialog2}>
+        <DialogTitle><IconInfoCircle /></DialogTitle>
+        <DialogContent>
+          <BlankCard>
+            <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <Typography variant="h5" sx={{ color: (theme) => theme.palette.error.main, mb: 2 }}>
+                Advertencia
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 3, textAlign: 'justify', width: '100%' }}>
+                ¿Está seguro de que desea eliminar este registro? Tenga en cuenta que esta acción es permanente y no se podrá recuperar.
+              </Typography>
+              <Button
+                variant="contained"
+                color="error"
+                sx={{ mt: 2 }}
+                onClick={handleDelete} // Llama a la función de eliminación
+              >
+                Eliminar
+              </Button>
+            </CardContent>
+          </BlankCard>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog2} color="primary">
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
       
-                    <Typography
-                      variant="body1"
-                      color="text.primary"
-                      sx={{
-                        mb: 3, // Añadir espacio debajo del texto
-                        textAlign: 'justify', // Justificar el texto
-                        width: '100%', // Asegurar que el texto ocupe todo el espacio disponible
-                      }}
-                    >
-                      ¿Está seguro de que desea eliminar este registro? Tenga en cuenta que esta acción es permanente y no se podrá recuperar.
-                    </Typography>
-      
-                    <Button
-                      variant="contained"
-                      color="error"
-                      sx={{
-                        mt: 2, // Añadir espacio encima del botón
-                        textAlign: 'center', // Centrar el texto del botón
-                      }}
-                    >
-                      Eliminar
-                    </Button>
-                  </CardContent>
-                </BlankCard>
-      
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleCloseDialog2} color="primary">
-                  Cerrar
-                </Button>
-              </DialogActions>
-            </Dialog>
-
       {/* Buscador */}
       <div>
         <Grid item xs={12} sm={10}>
@@ -238,7 +247,7 @@ const DescargasEPage: React.FC = () => {
               <TableCell align="center"><Typography variant="h6">F. Extensión</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Porcentaje</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Ver Soporte</Typography></TableCell>
-              <TableCell align="center"><Typography variant="h6">Editar descarga</Typography></TableCell>
+              <TableCell align="center"><Typography variant="h6">Eliminar  descarga</Typography></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -303,7 +312,7 @@ const DescargasEPage: React.FC = () => {
                     <Button
                       variant="contained"
                       color="error"
-                      onClick={handleOpenDialog2}
+                      onClick={() => handleOpenDialog2(descarga)} // Pasa el registro seleccionado
                       startIcon={<IconTrash />}
                     >
                       Eliminar

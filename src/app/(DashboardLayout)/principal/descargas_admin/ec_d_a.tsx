@@ -145,7 +145,7 @@ const ECDescargasAPage = () => {
   };
 
   return (
-    <DashboardCard title="Editar y Crear Descargas Académicas">
+    <DashboardCard title="Crear Descargas Académicas">
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Typography variant="h6">Descargas de:</Typography>

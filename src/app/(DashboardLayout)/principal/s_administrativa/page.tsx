@@ -8,8 +8,9 @@ import {
     TableRow, Paper, CircularProgress,
     Grid, TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, CardContent
 } from '@mui/material';
-import { IconEdit, IconPlus, IconRefresh, IconSearch, IconEye, IconTrash, IconInfoCircle } from '@tabler/icons-react';
+import { IconEdit, IconPlus, IconRefresh, IconSearch, IconEye, IconTrash, IconInfoCircle,IconDownload } from '@tabler/icons-react';
 import ECSituacionesA from './ec_s_a';
+import * as XLSX from 'xlsx'; // Importa la librería xlsx
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import BlankCard from '@/app/(DashboardLayout)/components/shared/BlankCard';
 
@@ -93,6 +94,13 @@ const SituacionesAPage: React.FC = () => {
     const handleRefresh = () => {
         window.location.reload(); // Recargar la página actual para volver a cargar las tablas
     };
+    // Función para exportar los datos a Excel
+      const exportToExcel = () => {
+        const ws = XLSX.utils.json_to_sheet(filteredSituaciones); // Convierte los datos a formato Excel
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Profesores'); // Crea un libro de trabajo con la hoja "Profesores"
+        XLSX.writeFile(wb, 'Profesores.xlsx'); // Descarga el archivo Excel
+      };
 
     return (
         <div>
@@ -112,15 +120,21 @@ const SituacionesAPage: React.FC = () => {
                             >
                                 Agregar
                             </Button>
-
                             {/* Botón de Actualizar */}
                             <Button
                                 variant="contained"
                                 startIcon={<IconRefresh />}
                                 onClick={handleRefresh}
+                                style={{ marginRight: '16px' }} // Espacio entre los botones
                             >
                                 Actualizar
                             </Button>
+                            {/* Botón de exportar */}
+                                          <Button variant="contained"
+                                            startIcon={<IconDownload />}
+                                            color="primary" onClick={exportToExcel}>
+                                            Exportar
+                                          </Button>
                         </Grid>
                     </Grid>
                 </div>

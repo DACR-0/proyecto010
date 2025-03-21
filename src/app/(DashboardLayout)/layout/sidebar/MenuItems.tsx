@@ -43,6 +43,16 @@ const Menuitems = [
   },
   {
     navlabel: true,
+    subheader: "PRUEVAS",
+  },
+  {
+    id: uniqueId(),
+    title: "PRUEVA",
+    icon: IconArrowBadgeRight,
+    href: "/principal/ec_d_a",
+  },
+  {
+    navlabel: true,
     subheader: "DESCARGAS ACADEMICAS",
   },
   {
@@ -64,12 +74,6 @@ const Menuitems = [
     href: "/principal/descargas_exten",
   },
   {
-    id: uniqueId(),
-    title: "ASIGNATURAS",
-    icon: IconArrowBadgeRight,
-    href: "/principal/programacion",
-  },
-  {
     navlabel: true,
     subheader: "SITUACIONES ADMINISTRATIVAS",
   },
@@ -85,9 +89,25 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: "Historico programacion",
+    title: "Historico Programacion",
     icon: IconArrowBadgeRight,
     href: "/principal/p_a_h",
+  },
+  {
+    id: uniqueId(),
+    title: "Asignaturas",
+    icon: IconArrowBadgeRight,
+    href: "/principal/programacion",
+  },
+  {
+    navlabel: true,
+    subheader: "CARGUES",
+  },
+  {
+    id: uniqueId(),
+    title: "Base Programacion Academica",
+    icon: IconArrowBadgeRight,
+    href: "/principal/Cargues",
   },
   {
     navlabel: true,

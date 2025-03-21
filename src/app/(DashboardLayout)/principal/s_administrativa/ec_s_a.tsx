@@ -157,11 +157,11 @@ const ECSituacionesAPage = () => {
   };
 
   return (
-    <DashboardCard title="Editar y Crear Descargas Académicas" sx={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <DashboardCard title="Agreagar Situación Administrativa" sx={{ maxWidth: '1200px', margin: '0 auto' }}>
       <Grid container spacing={3}>
         {/* Selección del profesor */}
         <Grid item xs={12}>
-          <Typography variant="h6">Descargas de:</Typography>
+          <Typography variant="h6">Docente:</Typography>
           <br />
           <TextField
             fullWidth
@@ -216,7 +216,7 @@ const ECSituacionesAPage = () => {
           </Grid>
           <Grid item xs={3}>
             <Typography variant="h6" align="center">
-              Soporte de Descarga
+              Soporte
             </Typography>
           </Grid>
         </Grid>
