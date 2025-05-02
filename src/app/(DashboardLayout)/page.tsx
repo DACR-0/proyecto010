@@ -14,12 +14,20 @@ const Dashboard = () => {
     const [horasOcasionales, setHorasOcasionales] = useState(null);
     const [horasHonorarios, setHorasHonorarios] = useState(null);
     const [horasTotal, setHorasTotal] = useState(null);
+
+    const [docente_catedra, setDocente_catedra] = useState(null);
+    const [docente_planta, setDocente_planta] = useState(null);
+    const [docente_ocasional, seDocente_ocasional] = useState(null);
+    const [personal_admin, setPersonal_admin] = useState(null);
+    const [pensionados, setpensionados] = useState(null);
+    const [total_docentes, setTotal_docentes] = useState(null);
+    const [s_admin, setS_admin] = useState(null);
   
     useEffect(() => {
       // Función para obtener los datos de la API
       const fetchData = async () => {
         try {
-          const response = await fetch('http://localhost:3000/api/dashboard'); // Asegúrate de que la URL sea correcta
+          const response = await fetch('/api/dashboard'); // Asegúrate de que la URL sea correcta
           const data = await response.json();
           
           // Asignamos los datos a los estados correspondientes
@@ -28,6 +36,14 @@ const Dashboard = () => {
           setHorasOcasionales(data[0].horas_ocasionales);
           setHorasHonorarios(data[0].horas_honorarios);
           setHorasTotal(data[0].horas_total);
+          setDocente_catedra(data[0].docente_catedra);
+          setDocente_planta(data[0].docente_planta);
+          seDocente_ocasional(data[0].docente_ocasional);
+          setPersonal_admin(data[0].personal_admin);
+          setpensionados(data[0].pensionados);
+          setTotal_docentes(data[0].total_docentes);
+          setS_admin(data[0].s_admin);
+          
         } catch (error) {
           console.error('Error al obtener los datos:', error);
         }
@@ -35,7 +51,7 @@ const Dashboard = () => {
   
       fetchData();
     }, []); // Solo se ejecuta una vez cuando el componente se monta
-  
+  // incluir <SalesOverview />
   return (
     <PageContainer title="Dashboard" description="this is Dashboard">
       <Box sx={{ mt: 2 }}>
@@ -103,7 +119,16 @@ const Dashboard = () => {
         <Box>
           <Grid container spacing={3}>
             <Grid item xs={12} lg={8}>
-              <SalesOverview />
+            <Box
+                component="img"
+                src="http://localhost:4000/cronograma/2025-1.png"
+                alt="Cronograma 2025"
+                sx={{
+                  width: '100%',
+                  height: 'auto',
+                  objectFit: 'cover',
+                }}
+              />
             </Grid>
             <Grid item xs={12} lg={4}>
               <Grid container spacing={3}>
@@ -142,7 +167,7 @@ const Dashboard = () => {
                 <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                   <IconUsers size={30} color="#ffffff" />
                 </Fab>
-                <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
+                <Typography variant="h6" sx={{ ml: 1 }}>{docente_catedra ?? 'Cargando...'}</Typography>
               </Box>
             </DashboardCard>
           </Grid>
@@ -156,7 +181,7 @@ const Dashboard = () => {
                 <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                   <IconUsers size={30} color="#ffffff" />
                 </Fab>
-                <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
+                <Typography variant="h6" sx={{ ml: 1 }}>{docente_planta ?? 'Cargando...'}</Typography>
               </Box>
             </DashboardCard>
           </Grid>
@@ -170,7 +195,7 @@ const Dashboard = () => {
                 <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                   <IconUsers size={30} color="#ffffff" />
                 </Fab>
-                <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
+                <Typography variant="h6" sx={{ ml: 1 }}>{docente_ocasional ?? 'Cargando...'}</Typography>
               </Box>
             </DashboardCard>
           </Grid>
@@ -184,7 +209,7 @@ const Dashboard = () => {
                 <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                   <IconUsers size={30} color="#ffffff" />
                 </Fab>
-                <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
+                <Typography variant="h6" sx={{ ml: 1 }}>{personal_admin ?? 'Cargando...'}</Typography>
               </Box>
             </DashboardCard>
           </Grid>
@@ -200,12 +225,12 @@ const Dashboard = () => {
                 <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                   <IconUsers size={30} color="#ffffff" />
                 </Fab>
-                <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
+                <Typography variant="h6" sx={{ ml: 1 }}>{pensionados ?? 'Cargando...'}</Typography>
               </Box>
             </DashboardCard>
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <DashboardCard title="TOTAL PROFESORES" sx={{
+            <DashboardCard title="TOTAL PROFESORES PROGRAMADOS" sx={{
               height: '100%',
               background: 'linear-gradient(to bottom,rgb(233, 244, 255), #ffffff)',  // Azul mucho más claro
               boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)'  // Sombra sutil
@@ -214,7 +239,7 @@ const Dashboard = () => {
                 <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                   <IconUsers size={30} color="#ffffff" />
                 </Fab>
-                <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
+                <Typography variant="h6" sx={{ ml: 1 }}>{total_docentes ?? 'Cargando...'}</Typography>
               </Box>
             </DashboardCard>
           </Grid>
@@ -228,7 +253,7 @@ const Dashboard = () => {
                 <Fab color="primary" size="medium" sx={{ backgroundColor: '#5d87ff', color: '#ffffff' }}>
                   <IconUsers size={30} color="#ffffff" />
                 </Fab>
-                <Typography variant="h6" sx={{ ml: 1 }}>HOLA MUNDO</Typography>
+                <Typography variant="h6" sx={{ ml: 1 }}>{s_admin ?? 'Cargando...'}</Typography>
               </Box>
             </DashboardCard>
           </Grid>

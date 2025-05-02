@@ -13,6 +13,7 @@ import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCa
 import ECDescargasI from './ec_d_i';
 import * as XLSX from 'xlsx'; // Importa la librería xlsx
 import BlankCard from '@/app/(DashboardLayout)/components/shared/BlankCard';
+import EditarA from './edit';
 
 interface Descarga {
   id_di: number;
@@ -34,6 +35,8 @@ const DescargasIPage: React.FC = () => {
   const [openDialog, setOpenDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal
   const [openDialog2, setOpenDialog2] = useState<boolean>(false);
   const [idToDelete, setIdToDelete] = useState<number | null>(null);  // Estado para guardar el id de la descarga a eliminar
+  const [selectedDescargaForEdit, setSelectedDescargaForEdit] = useState<Descarga | null>(null); // Estado para manejar la descarga seleccionada para editar
+  const [openEditDialog, setOpenEditDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal de edición
 
   useEffect(() => {
     const fetchDescargas = async () => {
@@ -92,8 +95,30 @@ const DescargasIPage: React.FC = () => {
   const handleCloseDialog2 = () => {
     setOpenDialog2(false); // Cierra el modal
   };
-  const handleRefresh = () => {
-    window.location.reload(); // Recargar la página actual para volver a cargar las tablas
+  const handleOpenEditDialog = (descarga: Descarga) => {
+    setSelectedDescargaForEdit(descarga); // Establece la descarga seleccionada para editar
+    setOpenEditDialog(true); // Abre el modal de edición
+  };
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false); // Cierra el modal de edición
+  };
+  const handleRefresh = async () => {
+    setLoading(true); // Activa el estado de carga
+    setError(null); // Resetea cualquier mensaje de error
+
+    try {
+      const response = await fetch('/api/descargas_inves'); // Obtiene los datos de la API
+      if (!response.ok) {
+        throw new Error('Error al obtener las descargas de investigación');
+      }
+      const data = await response.json(); // Convierte la respuesta en formato JSON
+      setDescargas(data); // Actualiza el estado con los nuevos datos de las descargas
+    } catch (error) {
+      console.error(error);
+      setError('Hubo un problema al cargar los datos.'); // Muestra un mensaje de error
+    } finally {
+      setLoading(false); // Desactiva el estado de carga
+    }
   };
   // Función para exportar los datos a Excel
   const exportToExcel = () => {
@@ -102,30 +127,30 @@ const DescargasIPage: React.FC = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Profesores'); // Crea un libro de trabajo con la hoja "Profesores"
     XLSX.writeFile(wb, 'Profesores.xlsx'); // Descarga el archivo Excel
   };
-  
+
   const handleDelete = async () => {
-      try {
-        // Hacer la solicitud DELETE a la API
-        const response = await fetch('/api/descargas_inves/eliminar', {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ id_di: idToDelete }),
-        });
+    try {
+      // Hacer la solicitud DELETE a la API
+      const response = await fetch('/api/descargas_inves/eliminar', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id_di: idToDelete }),
+      });
 
-        if (!response.ok) {
-          throw new Error('No se pudo eliminar el registro');
-        }
-
-        // Eliminar el registro del estado
-        setDescargas(descargas.filter((descarga) => descarga.id_di !== idToDelete));
-        setOpenDialog2(false);  // Cerrar el modal
-        alert('Registro eliminado correctamente');
-      } catch (error) {
-        console.error('Error al eliminar el registro:', error);
-        alert('Error al eliminar el registro');
+      if (!response.ok) {
+        throw new Error('No se pudo eliminar el registro');
       }
+
+      // Eliminar el registro del estado
+      setDescargas(descargas.filter((descarga) => descarga.id_di !== idToDelete));
+      setOpenDialog2(false);  // Cerrar el modal
+      alert('Registro eliminado correctamente');
+    } catch (error) {
+      console.error('Error al eliminar el registro:', error);
+      alert('Error al eliminar el registro');
+    }
   };
 
   return (
@@ -228,6 +253,24 @@ const DescargasIPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Modal de edición */}
+      <Dialog open={openEditDialog} onClose={handleCloseEditDialog} maxWidth="xl">
+        <DialogContent>
+          {/* Pasa el idDescarga y la función onClose como prop */}
+          {selectedDescargaForEdit && (
+            <EditarA
+              idDescarga={String(selectedDescargaForEdit.id_di)}
+              onClose={handleCloseEditDialog} // Pasa la función para cerrar el modal
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditDialog} color="primary">
+            Cancelar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Buscador */}
       <div>
         <Grid item xs={12} sm={10}>
@@ -258,71 +301,92 @@ const DescargasIPage: React.FC = () => {
               <TableCell align="center"><Typography variant="h6">Fecha de inicio</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Fecha de fin</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Ver Soporte</Typography></TableCell>
+              <TableCell align="center"><Typography variant="h6">Editar</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Eliminar descarga</Typography></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredDescargas.map((descarga) => (
-              <TableRow
-                key={descarga.id_di}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: '#d3d4d5',
-                    cursor: 'pointer',
-                  },
-                }}
-              >
-                <TableCell>{descarga.id_profesor}</TableCell>
-                <TableCell>{descarga.nombre_profesor}</TableCell>
-                <TableCell>{descarga.nombre_fi}</TableCell>
-                <TableCell>{descarga.porcentaje}%</TableCell>
-                <TableCell>{descarga.fecha_inicio}</TableCell>
-                <TableCell>{descarga.fecha_fin}</TableCell>
-                <TableCell align="center">
-                  {descarga.soporte ? (
-                    <Button
-                      style={{
-                        backgroundColor: '#1976d2',
-                        color: 'white',
-                      }}
-                      variant="contained"
-                      startIcon={<IconEye />}
-                      onClick={() => {
-                        if (!descarga.soporte) return;
-                        const soporteFileName = descarga.soporte;
-                        if (!soporteFileName) return;
+            {
+              filteredDescargas.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center">
+                    <Typography variant="h6" color="textSecondary">
+                      No se encontraron resultados
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (filteredDescargas.map((descarga) => (
+                <TableRow
+                  key={descarga.id_di}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: '#d3d4d5',
+                      cursor: 'pointer',
+                    },
+                  }}
+                >
+                  <TableCell>{descarga.id_profesor}</TableCell>
+                  <TableCell>{descarga.nombre_profesor}</TableCell>
+                  <TableCell>{descarga.nombre_fi}</TableCell>
+                  <TableCell>{descarga.porcentaje}%</TableCell>
+                  <TableCell>{descarga.fecha_inicio}</TableCell>
+                  <TableCell>{descarga.fecha_fin}</TableCell>
+                  <TableCell align="center">
+                    {descarga.soporte ? (
+                      <Button
+                        style={{
+                          backgroundColor: '#1976d2',
+                          color: 'white',
+                        }}
+                        variant="contained"
+                        startIcon={<IconEye />}
+                        onClick={() => {
+                          if (!descarga.soporte) return;
+                          const soporteFileName = descarga.soporte;
+                          if (!soporteFileName) return;
 
-                        if (soporteFileName.startsWith('file')) {
-                          const fileUrl = `http://localhost:4000/uploads/${encodeURIComponent(soporteFileName)}`;
-                          window.open(fileUrl, '_blank');
-                        } else if (soporteFileName.includes('drive.google.com')) {
-                          window.open(soporteFileName, '_blank');
-                        } else {
-                          alert('Tipo de archivo o enlace no soportado');
-                        }
-                      }}
+                          if (soporteFileName.startsWith('file')) {
+                            const fileUrl = `http://localhost:4000/uploads/${encodeURIComponent(soporteFileName)}`;
+                            window.open(fileUrl, '_blank');
+                          } else if (soporteFileName.includes('drive.google.com')) {
+                            window.open(soporteFileName, '_blank');
+                          } else {
+                            alert('Tipo de archivo o enlace no soportado');
+                          }
+                        }}
+                      >
+                        Ver
+                      </Button>
+                    ) : (
+                      'No disponible'
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<IconEdit />}
+                      onClick={() => handleOpenEditDialog(descarga)} // Acción al hacer clic en editar
                     >
-                      Ver
+                      Editar
                     </Button>
-                  ) : (
-                    'No disponible'
-                  )}
-                </TableCell>
-                <TableCell align="center">
-                  <Button
-                    variant="contained"
-                    color="error"
-                    onClick={() => {
-                      setIdToDelete(descarga.id_di);  // Guardamos el id del registro que se va a eliminar
-                      handleOpenDialog2();             // Abrimos el modal de confirmación
-                    }}
-                    startIcon={<IconTrash />}
-                  >
-                    Eliminar
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={() => {
+                        setIdToDelete(descarga.id_di);  // Guardamos el id del registro que se va a eliminar
+                        handleOpenDialog2();             // Abrimos el modal de confirmación
+                      }}
+                      startIcon={<IconTrash />}
+                    >
+                      Eliminar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )))
+            }
           </TableBody>
 
         </Table>

@@ -73,7 +73,7 @@ const MonthlyEarnings = () => {
         </Fab>
       }
       footer={
-        <Chart options={optionscolumnchart} series={seriescolumnchart} type="area" height={140} width="100%" />
+        <Chart options={optionscolumnchart} series={seriescolumnchart} type="area" height={220} width="100%" />
       }
       sx={{ height: '100%' }}
     >

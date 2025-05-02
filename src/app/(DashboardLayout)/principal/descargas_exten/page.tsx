@@ -13,6 +13,7 @@ import ECDescargasE from './ec_d_e';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import * as XLSX from 'xlsx'; // Importa la librería xlsx
 import BlankCard from '@/app/(DashboardLayout)/components/shared/BlankCard';
+import EditarA from './edit';
 
 interface Descarga {
   id_de: number;
@@ -33,6 +34,8 @@ const DescargasEPage: React.FC = () => {
   const [openDialog, setOpenDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal
   const [openDialog2, setOpenDialog2] = useState<boolean>(false);
   const [selectedDescarga, setSelectedDescarga] = useState<Descarga | null>(null);
+  const [selectedDescargaForEdit, setSelectedDescargaForEdit] = useState<Descarga | null>(null); // Estado para manejar la descarga seleccionada para editar
+  const [openEditDialog, setOpenEditDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal de edición
 
 
   useEffect(() => {
@@ -101,8 +104,30 @@ const DescargasEPage: React.FC = () => {
   const handleCloseDialog2 = () => {
     setOpenDialog2(false); // Cierra el modal
   };
-  const handleRefresh = () => {
-    window.location.reload(); // Recargar la página actual para volver a cargar las tablas
+  const handleOpenEditDialog = (descarga: Descarga) => {
+    setSelectedDescargaForEdit(descarga); // Establece la descarga seleccionada para editar
+    setOpenEditDialog(true); // Abre el modal de edición
+  };
+
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false); // Cierra el modal de edición
+  };
+  const handleRefresh = async () => {
+    setLoading(true); // Establece el estado de carga en verdadero antes de hacer la solicitud
+    try {
+      const response = await fetch('/api/descargas_exten');
+      if (!response.ok) {
+        throw new Error('Error al obtener las descargas de Extensión');
+      }
+      const data = await response.json();
+      setDescargas(data); // Actualiza el estado de las descargas con los nuevos datos
+      setFilteredDescargas(data); // Actualiza las descargas filtradas también
+    } catch (error) {
+      console.error(error);
+      setError('Hubo un problema al cargar los datos.');
+    } finally {
+      setLoading(false); // Finaliza el estado de carga
+    }
   };
   // Función para exportar los datos a Excel
   const exportToExcel = () => {
@@ -217,7 +242,24 @@ const DescargasEPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      
+      {/* Modal de edición */}
+      <Dialog open={openEditDialog} onClose={handleCloseEditDialog}>
+        <DialogContent>
+          {/* Pasa el idDescarga y la función onClose como prop */}
+          {selectedDescargaForEdit && (
+            <EditarA
+              idDescarga={String(selectedDescargaForEdit.id_de)}
+              onClose={handleCloseEditDialog} // Pasa la función para cerrar el modal
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditDialog} color="primary">
+            Cancelar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Buscador */}
       <div>
         <Grid item xs={12} sm={10}>
@@ -247,6 +289,7 @@ const DescargasEPage: React.FC = () => {
               <TableCell align="center"><Typography variant="h6">F. Extensión</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Porcentaje</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Ver Soporte</Typography></TableCell>
+              <TableCell align="center"><Typography variant="h6">Editar</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Eliminar  descarga</Typography></TableCell>
             </TableRow>
           </TableHead>
@@ -307,6 +350,16 @@ const DescargasEPage: React.FC = () => {
                     ) : (
                       'No disponible'
                     )}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<IconEdit />}
+                      onClick={() => handleOpenEditDialog(descarga)} // Acción al hacer clic en editar
+                    >
+                      Editar
+                    </Button>
                   </TableCell>
                   <TableCell align="center">
                     <Button

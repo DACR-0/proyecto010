@@ -3,9 +3,8 @@ import { Grid, Typography, TextField, Button, MenuItem } from '@mui/material';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
 interface Cargo {
-  id_fa: number;
-  nombre_cargo: string;
-  porcentaje: number;
+  ids_admin: number;
+  nombre: string;
 }
 
 interface Row {
@@ -14,8 +13,9 @@ interface Row {
   soporte: string | null;
   enlaceDrive: string | null;
   id_profesor: string;
-  periodo: string;
   nombre: string;
+  fecha_inicio: string;
+  fecha_fin: string;
 }
 
 interface EditarDescargaProps {
@@ -31,19 +31,20 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
   useEffect(() => {
     const fetchDescargaData = async () => {
       try {
-        const response = await fetch(`/api/descargas_admin/consulta?id_da=${idDescarga}`);
+        const response = await fetch(`/api/situacion_admin/consulta?idsituacion_admin=${idDescarga}`);
         if (!response.ok) throw new Error('Error al obtener los datos de la descarga');
         const data = await response.json();
 
         if (data) {
           const rowsData = [{
-            id: data.id_da,
-            cargo: data.id_fa,
+            id: data.idsituacion_admin,
+            cargo: data.id_s_a,
             soporte: data.soporte,
             enlaceDrive: data.soporte,
             id_profesor: data.id_profesor,
-            periodo: data.periodo,
-            nombre: data.nombre,
+            nombre: data.nombre_profesor,
+            fecha_inicio: data.fecha_inicio,
+            fecha_fin: data.fecha_fin
           }];
           setRows(rowsData);
         } else {
@@ -61,7 +62,7 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
   useEffect(() => {
     const fetchCargos = async () => {
       try {
-        const response = await fetch('/api/ec_d_a');
+        const response = await fetch('/api/ec_s_a');
         if (!response.ok) throw new Error('Error al obtener los cargos');
         const data = await response.json();
         setCargos(data);
@@ -74,7 +75,7 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
   }, []);
 
   const isFormValid = () => {
-    return rows.every((row) => row.cargo && row.enlaceDrive); // Verifica que haya un enlace
+    return rows.every((row) => row.cargo); // Verifica que haya un enlace
   };
 
   const handleFinalizar = async () => {
@@ -84,7 +85,7 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
         return;
       }
 
-      const response = await fetch(`/api/d_admin/edit?idDescarga=${idDescarga}`, {
+      const response = await fetch(`/api/s_admin/edit?idDescarga=${idDescarga}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -100,7 +101,7 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
       alert('Descarga editada exitosamente');
 
       // Resetear el estado de las filas
-      setRows([{ id: 1, cargo: null, soporte: null, enlaceDrive: '', id_profesor: '', periodo: '', nombre: '' }]);
+      setRows([{ id: 1, cargo: null, soporte: null, enlaceDrive: '', id_profesor: '', nombre: '', fecha_inicio: '', fecha_fin: '' }]);
 
       // Llamar a onClose para cerrar el modal después de editar
       onClose();
@@ -125,18 +126,16 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
           <Typography variant="h6">Nombre del Docente: {rows[0]?.nombre || 'No disponible'}</Typography>
         </Grid>
 
-        <Grid item xs={12}>
-          <Typography variant="h6">Periodo de la Descarga: {rows[0]?.periodo || 'No disponible'}</Typography>
-        </Grid>
-
         <Grid container spacing={2} style={{ marginTop: '16px', marginBottom: '16px' }} alignItems="center">
-          <Grid item xs={6}><Typography variant="h6" align="center">Cargos</Typography></Grid>
-          <Grid item xs={6}><Typography variant="h6" align="center">Soporte de Descarga (Enlace Google Drive)</Typography></Grid>
+          <Grid item xs={3}><Typography variant="h6" align="center">Cargos</Typography></Grid>
+          <Grid item xs={3}><Typography variant="h6" align="center">Fecha de inicio</Typography></Grid>
+          <Grid item xs={3}><Typography variant="h6" align="center">Fecha de fin</Typography></Grid>
+          <Grid item xs={3}><Typography variant="h6" align="center">Soporte de Descarga (Enlace Google Drive)</Typography></Grid>
         </Grid>
 
         {rows.map((row, index) => (
           <Grid container spacing={2} key={row.id} alignItems="center" style={{ marginTop: '2px', marginBottom: '2px' }}>
-            <Grid item xs={6}>
+            <Grid item xs={3}>
               <TextField
                 fullWidth
                 select
@@ -145,21 +144,52 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
                 value={row.cargo ?? ''}
                 onChange={(e) => {
                   const selectedCargoId = Number(e.target.value);
-                  const foundCargo = cargos.find((cargo) => cargo.id_fa === selectedCargoId);
+                  const foundCargo = cargos.find((cargo) => cargo.ids_admin === selectedCargoId);
                   const updatedRows = [...rows];
                   updatedRows[index].cargo = selectedCargoId;
                   setRows(updatedRows);
                 }}
               >
                 {cargos.map((cargo) => (
-                  <MenuItem key={cargo.id_fa} value={cargo.id_fa}>
-                    {cargo.nombre_cargo}
+                  <MenuItem key={cargo.ids_admin} value={cargo.ids_admin}>
+                    {cargo.nombre}
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
+            <Grid item xs={3}>
+              <TextField
+                fullWidth
+                type="date"
+                variant="outlined"
+                label="Fecha de inicio"
+                InputLabelProps={{ shrink: true }}
+                value={row.fecha_inicio ?? ''}
+                onChange={(e) => {
+                  const updatedRows = [...rows];
+                  updatedRows[index].fecha_inicio = e.target.value;
+                  setRows(updatedRows);
+                }}
+              />
+            </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={3}>
+              <TextField
+                fullWidth
+                type="date"
+                variant="outlined"
+                label="Fecha de fin"
+                InputLabelProps={{ shrink: true }}
+                value={row.fecha_fin ?? ''}
+                onChange={(e) => {
+                  const updatedRows = [...rows];
+                  updatedRows[index].fecha_fin = e.target.value;
+                  setRows(updatedRows);
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={3}>
               <TextField
                 fullWidth
                 variant="outlined"

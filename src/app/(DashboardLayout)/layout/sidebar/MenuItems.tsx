@@ -43,16 +43,6 @@ const Menuitems = [
   },
   {
     navlabel: true,
-    subheader: "PRUEVAS",
-  },
-  {
-    id: uniqueId(),
-    title: "PRUEVA",
-    icon: IconArrowBadgeRight,
-    href: "/principal/ec_d_a",
-  },
-  {
-    navlabel: true,
     subheader: "DESCARGAS ACADEMICAS",
   },
   {
@@ -72,6 +62,12 @@ const Menuitems = [
     title: "EXTENSION",
     icon: IconArrowBadgeRight,
     href: "/principal/descargas_exten",
+  },
+  {
+    id: uniqueId(),
+    title: "TOTAL DESCARGAS",
+    icon: IconArrowBadgeRight,
+    href: "/principal/descargas_tabla",
   },
   {
     navlabel: true,
@@ -105,10 +101,17 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: "Base Programacion Academica",
+    title: "Cargue de Plantillas",
     icon: IconArrowBadgeRight,
     href: "/principal/Cargues",
   },
+  {
+    id: uniqueId(),
+    title: "Plantillas",
+    icon: IconArrowBadgeRight,
+    href: "/principal/plantillas",
+  },
+  /* 
   {
     navlabel: true,
     subheader: "Utilities",
@@ -141,6 +144,7 @@ const Menuitems = [
     icon: IconAperture,
     href: "/sample-page",
   },
+  */
 ];
 
 export default Menuitems;

@@ -1,0 +1,6 @@
+.sticky-header {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 1;  /* Asegura que la cabecera quede sobre las filas */
+  }

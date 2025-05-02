@@ -3,9 +3,9 @@ import { Grid, Typography, TextField, Button, MenuItem } from '@mui/material';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
 interface Cargo {
-  id_fa: number;
-  nombre_cargo: string;
-  porcentaje: number;
+  id_fe: number;
+  nombre_fe: string;
+  porcentaje_max_fe: number;
 }
 
 interface Row {
@@ -16,6 +16,7 @@ interface Row {
   id_profesor: string;
   periodo: string;
   nombre: string;
+  porcentaje: number;
 }
 
 interface EditarDescargaProps {
@@ -31,19 +32,20 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
   useEffect(() => {
     const fetchDescargaData = async () => {
       try {
-        const response = await fetch(`/api/descargas_admin/consulta?id_da=${idDescarga}`);
+        const response = await fetch(`/api/descargas_exten/consulta?id_de=${idDescarga}`);
         if (!response.ok) throw new Error('Error al obtener los datos de la descarga');
         const data = await response.json();
 
         if (data) {
           const rowsData = [{
-            id: data.id_da,
-            cargo: data.id_fa,
+            id: data.id_de,
+            cargo: data.id_fe,
             soporte: data.soporte,
             enlaceDrive: data.soporte,
             id_profesor: data.id_profesor,
             periodo: data.periodo,
             nombre: data.nombre,
+            porcentaje: data.porcentaje
           }];
           setRows(rowsData);
         } else {
@@ -61,7 +63,7 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
   useEffect(() => {
     const fetchCargos = async () => {
       try {
-        const response = await fetch('/api/ec_d_a');
+        const response = await fetch('/api/ec_d_e');
         if (!response.ok) throw new Error('Error al obtener los cargos');
         const data = await response.json();
         setCargos(data);
@@ -84,7 +86,7 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
         return;
       }
 
-      const response = await fetch(`/api/d_admin/edit?idDescarga=${idDescarga}`, {
+      const response = await fetch(`/api/d_exten/edit?idDescarga=${idDescarga}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -100,7 +102,7 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
       alert('Descarga editada exitosamente');
 
       // Resetear el estado de las filas
-      setRows([{ id: 1, cargo: null, soporte: null, enlaceDrive: '', id_profesor: '', periodo: '', nombre: '' }]);
+      setRows([{ id: 1, cargo: null, soporte: null, enlaceDrive: '', id_profesor: '', periodo: '', nombre: '', porcentaje: 0 }]);
 
       // Llamar a onClose para cerrar el modal después de editar
       onClose();
@@ -130,13 +132,14 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
         </Grid>
 
         <Grid container spacing={2} style={{ marginTop: '16px', marginBottom: '16px' }} alignItems="center">
-          <Grid item xs={6}><Typography variant="h6" align="center">Cargos</Typography></Grid>
-          <Grid item xs={6}><Typography variant="h6" align="center">Soporte de Descarga (Enlace Google Drive)</Typography></Grid>
+          <Grid item xs={4}><Typography variant="h6" align="center">Cargos</Typography></Grid>
+          <Grid item xs={4}><Typography variant="h6" align="center">Porcentaje</Typography></Grid>
+          <Grid item xs={4}><Typography variant="h6" align="center">Soporte de Descarga (Enlace Google Drive)</Typography></Grid>
         </Grid>
 
         {rows.map((row, index) => (
           <Grid container spacing={2} key={row.id} alignItems="center" style={{ marginTop: '2px', marginBottom: '2px' }}>
-            <Grid item xs={6}>
+            <Grid item xs={4}>
               <TextField
                 fullWidth
                 select
@@ -145,21 +148,49 @@ const EditarAPage: React.FC<EditarDescargaProps> = ({ idDescarga, onClose }) => 
                 value={row.cargo ?? ''}
                 onChange={(e) => {
                   const selectedCargoId = Number(e.target.value);
-                  const foundCargo = cargos.find((cargo) => cargo.id_fa === selectedCargoId);
+                  const foundCargo = cargos.find((cargo) => cargo.id_fe === selectedCargoId);
                   const updatedRows = [...rows];
                   updatedRows[index].cargo = selectedCargoId;
                   setRows(updatedRows);
                 }}
               >
                 {cargos.map((cargo) => (
-                  <MenuItem key={cargo.id_fa} value={cargo.id_fa}>
-                    {cargo.nombre_cargo}
+                  <MenuItem key={cargo.id_fe} value={cargo.id_fe}>
+                    {cargo.nombre_fe}
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
+            <Grid item xs={4}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                type="number"
+                label="Porcentaje"
+                value={row.porcentaje ?? ''}
+                onChange={(e) => {
+                  const newValue = Number(e.target.value);
+                  // Aseguramos que el nuevo valor esté entre 0 y el valor máximo
+                  if (newValue >= 0 && newValue <= (cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100)) {
+                    const updatedRows = [...rows];
+                    updatedRows[index].porcentaje = newValue;
+                    setRows(updatedRows);
+                  } else {
+                    // Si el valor está fuera de rango, simplemente no se hace nada
+                    alert(`El porcentaje máximo de descarga permitido para este cargo es ${(cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100)}%`);
+                  }
+                  const updatedRows = [...rows];
+                  updatedRows[index].porcentaje = newValue;
+                  setRows(updatedRows);
+                }}
+                inputProps={{
+                  min: 0, // Establecer mínimo permitido en 0
+                  max: cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100, // Establecer máximo permitido según el cargo
+                }}
+              />
+            </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={4}>
               <TextField
                 fullWidth
                 variant="outlined"

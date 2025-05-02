@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import {
   Avatar,
@@ -10,16 +10,20 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-
 import { IconListCheck, IconMail, IconUser } from "@tabler/icons-react";
 
 const Profile = () => {
-  const [anchorEl2, setAnchorEl2] = useState(null);
-  const handleClick2 = (event: any) => {
+  const [anchorEl2, setAnchorEl2] = useState<null | HTMLElement>(null);
+  const anchorElRef = useRef<null | HTMLElement>(null);
+
+  const handleClick2 = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl2(event.currentTarget);
+    anchorElRef.current = event.currentTarget;  // Usamos el ref para almacenar el ancla
   };
+
   const handleClose2 = () => {
     setAnchorEl2(null);
+    anchorElRef.current = null;  // Limpiamos el ref cuando se cierra el menú
   };
 
   return (
@@ -51,31 +55,37 @@ const Profile = () => {
       {/* ------------------------------------------- */}
       <Menu
         id="msgs-menu"
-        anchorEl={anchorEl2}
+        anchorEl={anchorEl2} // Usamos el anchorEl para referenciar el menú
         keepMounted
-        open={Boolean(anchorEl2)}
-        onClose={handleClose2}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        open={Boolean(anchorEl2)} // El menú está abierto si anchorEl2 no es null
+        onClose={handleClose2} // Cerrar el menú cuando se hace clic en algo
+        anchorOrigin={{
+          horizontal: "right",
+          vertical: "bottom",
+        }}
+        transformOrigin={{
+          horizontal: "right",
+          vertical: "top",
+        }}
         sx={{
           "& .MuiMenu-paper": {
-            width: "200px",
+            width: "200px", // Personalización opcional del menú
           },
         }}
       >
-        <MenuItem>
+        <MenuItem onClick={handleClose2}>
           <ListItemIcon>
             <IconUser width={20} />
           </ListItemIcon>
           <ListItemText>My Profile</ListItemText>
         </MenuItem>
-        <MenuItem>
+        <MenuItem onClick={handleClose2}>
           <ListItemIcon>
             <IconMail width={20} />
           </ListItemIcon>
           <ListItemText>My Account</ListItemText>
         </MenuItem>
-        <MenuItem>
+        <MenuItem onClick={handleClose2}>
           <ListItemIcon>
             <IconListCheck width={20} />
           </ListItemIcon>

@@ -8,11 +8,12 @@ import {
     TableRow, Paper, CircularProgress,
     Grid, TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, CardContent
 } from '@mui/material';
-import { IconEdit, IconPlus, IconRefresh, IconSearch, IconEye, IconTrash, IconInfoCircle,IconDownload } from '@tabler/icons-react';
+import { IconEdit, IconPlus, IconRefresh, IconSearch, IconEye, IconTrash, IconInfoCircle, IconDownload } from '@tabler/icons-react';
 import ECSituacionesA from './ec_s_a';
 import * as XLSX from 'xlsx'; // Importa la librería xlsx
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import BlankCard from '@/app/(DashboardLayout)/components/shared/BlankCard';
+import EditarA from './edit';
 
 interface Situaciones {
     idsituacion_admin: number;
@@ -32,6 +33,10 @@ const SituacionesAPage: React.FC = () => {
 
     const [openDialog, setOpenDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal
     const [openDialog2, setOpenDialog2] = useState<boolean>(false);
+    const [idToDelete, setIdToDelete] = useState<number | null>(null);  // Estado para guardar el id a eliminar
+    const [selectedDescargaForEdit, setSelectedDescargaForEdit] = useState<Situaciones | null>(null); // Estado para manejar la descarga seleccionada para editar
+    const [openEditDialog, setOpenEditDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal de edición
+
 
     useEffect(() => {
         const fetchSituaciones = async () => {
@@ -91,16 +96,62 @@ const SituacionesAPage: React.FC = () => {
     const handleCloseDialog2 = () => {
         setOpenDialog2(false); // Cierra el modal 2
     };
-    const handleRefresh = () => {
-        window.location.reload(); // Recargar la página actual para volver a cargar las tablas
+    const handleRefresh = async () => {
+        setLoading(true); // Activa el estado de carga
+        setError(null); // Resetea cualquier mensaje de error
+    
+        try {
+          const response = await fetch('/api/situacion_admin'); // Obtiene los datos de la API
+          if (!response.ok) {
+            throw new Error('Error al obtener las Situasiones administrativas');
+          }
+          const data = await response.json(); // Convierte la respuesta en formato JSON
+          setSituaciones(data); // Actualiza el estado con los nuevos datos de las descargas
+        } catch (error) {
+          console.error(error);
+          setError('Hubo un problema al cargar los datos.'); // Muestra un mensaje de error
+        } finally {
+          setLoading(false); // Desactiva el estado de carga
+        }
+      };
+    const handleOpenEditDialog = (situacion: Situaciones) => {
+        setSelectedDescargaForEdit(situacion); // Establece la descarga seleccionada para editar
+        setOpenEditDialog(true); // Abre el modal de edición
+    };
+    const handleCloseEditDialog = () => {
+        setOpenEditDialog(false); // Cierra el modal de edición
+    };
+    const handleDelete = async () => {
+        try {
+            // Hacer la solicitud DELETE a la API
+            const response = await fetch('/api/situacion_admin/eliminar', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ idsituacion_admin: idToDelete }),
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudo eliminar el registro');
+            }
+
+            // Eliminar el registro del estado
+            setSituaciones(situaciones.filter((situacion) => situacion.idsituacion_admin !== idToDelete));
+            setOpenDialog2(false);  // Cerrar el modal
+            alert('Registro eliminado correctamente');
+        } catch (error) {
+            console.error('Error al eliminar el registro:', error);
+            alert('Error al eliminar el registro');
+        }
     };
     // Función para exportar los datos a Excel
-      const exportToExcel = () => {
+    const exportToExcel = () => {
         const ws = XLSX.utils.json_to_sheet(filteredSituaciones); // Convierte los datos a formato Excel
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Profesores'); // Crea un libro de trabajo con la hoja "Profesores"
         XLSX.writeFile(wb, 'Profesores.xlsx'); // Descarga el archivo Excel
-      };
+    };
 
     return (
         <div>
@@ -130,11 +181,11 @@ const SituacionesAPage: React.FC = () => {
                                 Actualizar
                             </Button>
                             {/* Botón de exportar */}
-                                          <Button variant="contained"
-                                            startIcon={<IconDownload />}
-                                            color="primary" onClick={exportToExcel}>
-                                            Exportar
-                                          </Button>
+                            <Button variant="contained"
+                                startIcon={<IconDownload />}
+                                color="primary" onClick={exportToExcel}>
+                                Exportar
+                            </Button>
                         </Grid>
                     </Grid>
                 </div>
@@ -153,71 +204,88 @@ const SituacionesAPage: React.FC = () => {
             </Dialog>
 
             {/* Dialog Modal2 */}
-      <Dialog open={openDialog2} onClose={handleCloseDialog2}>
-        <DialogTitle><IconInfoCircle /></DialogTitle>
-        <DialogContent>
-          {/* Aquí insertas el formulario de para editar <DAedit> */}
-          <BlankCard>
-            <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-              <Typography
-                variant="h5"
-                sx={{
-                  color: (theme) => theme.palette.error.main,
-                  mb: 2, // Añadir espacio debajo del título
-                }}
-              >
-                Advertencia
-              </Typography>
-              <Typography
-                variant="body1"
-                color="text.primary"
-                sx={{
-                  mb: 3, // Añadir espacio debajo del texto
-                  textAlign: 'justify', // Justificar el texto
-                  width: '100%', // Asegurar que el texto ocupe todo el espacio disponible
-                }}
-              >
-                ¿Está seguro de que desea eliminar este registro? Tenga en cuenta que esta acción es permanente y no se podrá recuperar.
-              </Typography>
+            <Dialog open={openDialog2} onClose={handleCloseDialog2}>
+                <DialogTitle><IconInfoCircle /></DialogTitle>
+                <DialogContent>
+                    {/* Aquí insertas el formulario de para editar <DAedit> */}
+                    <BlankCard>
+                        <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                            <Typography
+                                variant="h5"
+                                sx={{
+                                    color: (theme) => theme.palette.error.main,
+                                    mb: 2, // Añadir espacio debajo del título
+                                }}
+                            >
+                                Advertencia
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                color="text.primary"
+                                sx={{
+                                    mb: 3, // Añadir espacio debajo del texto
+                                    textAlign: 'justify', // Justificar el texto
+                                    width: '100%', // Asegurar que el texto ocupe todo el espacio disponible
+                                }}
+                            >
+                                ¿Está seguro de que desea eliminar este registro? Tenga en cuenta que esta acción es permanente y no se podrá recuperar.
+                            </Typography>
 
-              <Button
-                variant="contained"
-                color="error"
-                sx={{
-                  mt: 2, // Añadir espacio encima del botón
-                  textAlign: 'center', // Centrar el texto del botón
-                }}
-              >
-                Eliminar
-              </Button>
-            </CardContent>
-          </BlankCard>
+                            <Button
+                                variant="contained"
+                                color="error"
+                                sx={{
+                                    mt: 2, // Añadir espacio encima del botón
+                                    textAlign: 'center', // Centrar el texto del botón
+                                }}
+                                onClick={handleDelete} // Llama a la función de eliminación
+                            >
+                                Eliminar
+                            </Button>
+                        </CardContent>
+                    </BlankCard>
 
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog2} color="primary">
-            Cerrar
-          </Button>
-        </DialogActions>
-      </Dialog>
-            <div>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Buscar por Documento, Profesor o Situación"
-                        variant="outlined"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <IconSearch />
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
-                </Grid>
-            </div>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog2} color="primary">
+                        Cerrar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            {/* Modal de edición */}
+            <Dialog open={openEditDialog} onClose={handleCloseEditDialog} maxWidth="xl">
+                <DialogContent>
+                    {/* Pasa el idDescarga y la función onClose como prop */}
+                    {selectedDescargaForEdit && (
+                        <EditarA
+                            idDescarga={String(selectedDescargaForEdit.idsituacion_admin)}
+                            onClose={handleCloseEditDialog} // Pasa la función para cerrar el modal
+                        />
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseEditDialog} color="primary">
+                        Cancelar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Grid item xs={12} sm={6}>
+                <TextField
+                    fullWidth
+                    label="Buscar por Documento, Profesor o Situación"
+                    variant="outlined"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <IconSearch />
+                            </InputAdornment>
+                        ),
+                    }}
+                />
+            </Grid>
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
@@ -228,7 +296,8 @@ const SituacionesAPage: React.FC = () => {
                             <TableCell align="center"><Typography variant="h6">Fecha de inicio</Typography></TableCell>
                             <TableCell align="center"><Typography variant="h6">Fecha de fin</Typography></TableCell>
                             <TableCell align="center"><Typography variant="h6">Ver Soporte</Typography></TableCell>
-                            <TableCell align="center"><Typography variant="h6">Editar Situación</Typography></TableCell>
+                            <TableCell align="center"><Typography variant="h6">Editar</Typography></TableCell>
+                            <TableCell align="center"><Typography variant="h6">Eliminar situación administrativa</Typography></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -286,17 +355,23 @@ const SituacionesAPage: React.FC = () => {
                                         <Button
                                             variant="contained"
                                             color="primary"
-                                            onClick={handleOpenDialog2}
-                                        >
-                                            <IconEdit />
+                                            startIcon={<IconEdit />}
+                                            onClick={() => handleOpenEditDialog(situacion)} // Acción al hacer clic en editar
+                                        > Editar
                                         </Button>
+                                    </div>
+                                </TableCell>
+                                <TableCell align="center">
+                                    <div style={{ display: 'flex', gap: '12px' }}> {/* Contenedor flex para los botones */}
                                         <Button
                                             variant="contained"
                                             color="error"
-                                            onClick={handleOpenDialog2}
-                                            //startIcon={<IconTrash />}
-                                        >
-                                            <IconTrash />
+                                            onClick={() => {
+                                                setIdToDelete(situacion.idsituacion_admin);  // Guardamos el id del registro que se va a eliminar
+                                                handleOpenDialog2();             // Abrimos el modal de confirmación
+                                            }}
+                                            startIcon={<IconTrash />}
+                                        > Eliminar
                                         </Button>
                                     </div>
                                 </TableCell>

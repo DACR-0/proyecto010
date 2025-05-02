@@ -104,8 +104,22 @@ const DescargasAPage: React.FC = () => {
   const handleCloseDialog2 = () => {
     setOpenDialog2(false); // Cierra el modal 2
   };
-  const handleRefresh = () => {
-    window.location.reload(); // Recargar la página actual para volver a cargar las tablas
+  const handleRefresh = async () => {
+    setLoading(true); // Muestra el indicador de carga mientras se obtienen los datos
+    try {
+      const response = await fetch('/api/descargas_admin'); // Asegúrate de que este endpoint sea correcto
+      if (!response.ok) {
+        throw new Error('Error al obtener las descargas académicas');
+      }
+      const data = await response.json();
+      setDescargas(data); // Actualiza las descargas con los nuevos datos
+      setFilteredDescargas(data); // Actualiza las descargas filtradas también
+    } catch (error) {
+      console.error(error);
+      setError('Hubo un problema al cargar los datos.');
+    } finally {
+      setLoading(false); // Oculta el indicador de carga una vez que los datos estén listos
+    }
   };
   const handleOpenEditDialog = (descarga: Descarga) => {
     setSelectedDescargaForEdit(descarga); // Establece la descarga seleccionada para editar
@@ -232,7 +246,6 @@ const DescargasAPage: React.FC = () => {
       {/*modal 3*/}
       {/* Modal de edición */}
       <Dialog open={openEditDialog} onClose={handleCloseEditDialog}>
-        <DialogTitle>Editar Descarga Académica</DialogTitle>
         <DialogContent>
           {/* Pasa el idDescarga y la función onClose como prop */}
           {selectedDescargaForEdit && (

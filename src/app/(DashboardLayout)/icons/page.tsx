@@ -8,7 +8,7 @@ const Icons = () => {
     <PageContainer title="Icons" description="this is Icons">
 
       <DashboardCard title="Icons">
-      <iframe src="https://tabler-icons.io/"  title="Inline Frame Example" frameBorder={0}
+      <iframe src="https://sma.unicartagena.edu.co:8443/Smaix12/vista/mainMenu.jsp"  title="Inline Frame Example" frameBorder={0}
     width="100%"
     height="650"></iframe>
       </DashboardCard>
