@@ -2,7 +2,7 @@ import { pool } from '@/utils/db';
 
 export async function POST(req) {
   try {
-    const body = await req.json(); // Cambiado de req.body a req.json()
+    const body = await req.json();
     const { profesor, periodo, rows } = body;
 
     if (!Array.isArray(rows)) {
@@ -10,11 +10,11 @@ export async function POST(req) {
     }
 
     for (const row of rows) {
-      const { cargo, porcentaje, soporte } = row;
+      const { cargo, porcentaje, soporte, soporte2 } = row; // soporte2 incluido
 
       await pool.query(
-        `INSERT INTO descarga_extencion (id_profesor, id_fe, porcentaje, soporte, periodo) VALUES (?, ?, ?, ?, ?)`,
-        [profesor, cargo, porcentaje, soporte, periodo]
+        `INSERT INTO descarga_extencion (id_profesor, id_fe, porcentaje, soporte, soporte2, periodo) VALUES (?, ?, ?, ?, ?, ?)`,
+        [profesor, cargo, porcentaje, soporte, soporte2, periodo]
       );
     }
 

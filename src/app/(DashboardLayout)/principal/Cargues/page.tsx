@@ -14,11 +14,13 @@ import PageContainer from '@/app/(DashboardLayout)/components/container/PageCont
 import Ctotal from './total/page'
 import Cdocente from './docentes_planta/page'
 import DescargasA from './descargas_academicas/page'
+import MOD from './modificaciones/page'
 
 const CarguePage = () => {
   const [openDialog, setOpenDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal
   const [openDialog2, setOpenDialog2] = useState<boolean>(false); // Estado para abrir/cerrar el modal 2
-  const [openDialog3, setOpenDialog3] = useState<boolean>(false); // Estado para abrir/cerrar el modal 2
+  const [openDialog3, setOpenDialog3] = useState<boolean>(false); // Estado para abrir/cerrar el modal 3
+  const [openDialog4, setOpenDialog4] = useState<boolean>(false); // Estado para abrir/cerrar el modal 4
   const handleCloseDialog = () => {
     setOpenDialog(false); // Cierra el modal 
   };
@@ -28,6 +30,9 @@ const CarguePage = () => {
   const handleCloseDialog3 = () => {
     setOpenDialog3(false); // Cierra el modal 3
   };
+  const handleCloseDialog4 = () => {
+    setOpenDialog4(false); // Cierra el modal 3
+  };
   const handleOpenDialog = () => {
     setOpenDialog(true); // Abre el modal
   };
@@ -36,6 +41,9 @@ const CarguePage = () => {
   };
   const handleOpenDialog3 = () => {
     setOpenDialog3(true); // Abre el modal 3
+  };
+  const handleOpenDialog4 = () => {
+    setOpenDialog4(true); // Abre el modal 3
   };
   return (
     <div>
@@ -68,6 +76,17 @@ const CarguePage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog3} color="primary">
+            Cancelar
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Dialog Modal 4 */}
+      <Dialog open={openDialog4} onClose={handleCloseDialog4}>
+        <DialogContent>
+          <MOD/>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog4} color="primary">
             Cancelar
           </Button>
         </DialogActions>
@@ -112,6 +131,17 @@ const CarguePage = () => {
         </Button>
       </DashboardCard>
       <Divider sx={{ my: 2 }} />
+      <DashboardCard title="4. Cargue - Modificaciones">
+        {/* Botón de Agregar TOTAL */}
+        <Button
+          variant="contained"
+          startIcon={<IconPlus />}
+          onClick={handleOpenDialog4}
+          style={{ marginRight: '16px' }} // Espacio entre los botones
+        >
+          Cargar
+        </Button>
+      </DashboardCard>
       
 
     </div>

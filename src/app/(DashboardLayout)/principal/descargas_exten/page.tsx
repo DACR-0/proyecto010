@@ -11,7 +11,7 @@ import {
 import { IconEdit, IconPlus, IconRefresh, IconEye, IconSearch, IconDownload, IconTrash, IconInfoCircle } from '@tabler/icons-react';
 import ECDescargasE from './ec_d_e';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
-import * as XLSX from 'xlsx'; // Importa la librería xlsx
+import * as XLSX from 'xlsx';
 import BlankCard from '@/app/(DashboardLayout)/components/shared/BlankCard';
 import EditarA from './edit';
 
@@ -21,22 +21,22 @@ interface Descarga {
   nombre_profesor: string;
   nombre_fe: string;
   porcentaje: number;
-  soporte: string | null; // Permite que sea opcional o null
+  soporte: string | null;
+  soporte2?: string | null; // <-- Nuevo campo para el anexo
 }
 
 const DescargasEPage: React.FC = () => {
   const [descargas, setDescargas] = useState<Descarga[]>([]);
-  const [filteredDescargas, setFilteredDescargas] = useState<Descarga[]>([]); // Nuevo estado para las descargas filtradas
+  const [filteredDescargas, setFilteredDescargas] = useState<Descarga[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>(''); // Nuevo estado para el término de búsqueda
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
-  const [openDialog, setOpenDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [openDialog2, setOpenDialog2] = useState<boolean>(false);
   const [selectedDescarga, setSelectedDescarga] = useState<Descarga | null>(null);
-  const [selectedDescargaForEdit, setSelectedDescargaForEdit] = useState<Descarga | null>(null); // Estado para manejar la descarga seleccionada para editar
-  const [openEditDialog, setOpenEditDialog] = useState<boolean>(false); // Estado para abrir/cerrar el modal de edición
-
+  const [selectedDescargaForEdit, setSelectedDescargaForEdit] = useState<Descarga | null>(null);
+  const [openEditDialog, setOpenEditDialog] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchDescargas = async () => {
@@ -47,7 +47,7 @@ const DescargasEPage: React.FC = () => {
         }
         const data = await response.json();
         setDescargas(data);
-        setFilteredDescargas(data); // Inicializa las descargas filtradas
+        setFilteredDescargas(data);
       } catch (error) {
         console.error(error);
         setError('Hubo un problema al cargar los datos.');
@@ -61,7 +61,6 @@ const DescargasEPage: React.FC = () => {
 
   useEffect(() => {
     if (searchTerm) {
-      // Filtra las descargas por id_profesor, nombre_profesor o nombre_fe
       setFilteredDescargas(
         descargas.filter(
           (descarga) =>
@@ -71,7 +70,6 @@ const DescargasEPage: React.FC = () => {
         )
       );
     } else {
-      // Si no hay término de búsqueda, muestra todas las descargas
       setFilteredDescargas(descargas);
     }
   }, [searchTerm, descargas]);
@@ -92,49 +90,48 @@ const DescargasEPage: React.FC = () => {
   }
 
   const handleOpenDialog = () => {
-    setOpenDialog(true); // Abre el modal
+    setOpenDialog(true);
   };
   const handleOpenDialog2 = (descarga: Descarga) => {
-    setSelectedDescarga(descarga); // Establece el registro a eliminar
+    setSelectedDescarga(descarga);
     setOpenDialog2(true);
   };
   const handleCloseDialog = () => {
-    setOpenDialog(false); // Cierra el modal
+    setOpenDialog(false);
   };
   const handleCloseDialog2 = () => {
-    setOpenDialog2(false); // Cierra el modal
+    setOpenDialog2(false);
   };
   const handleOpenEditDialog = (descarga: Descarga) => {
-    setSelectedDescargaForEdit(descarga); // Establece la descarga seleccionada para editar
-    setOpenEditDialog(true); // Abre el modal de edición
+    setSelectedDescargaForEdit(descarga);
+    setOpenEditDialog(true);
   };
 
   const handleCloseEditDialog = () => {
-    setOpenEditDialog(false); // Cierra el modal de edición
+    setOpenEditDialog(false);
   };
   const handleRefresh = async () => {
-    setLoading(true); // Establece el estado de carga en verdadero antes de hacer la solicitud
+    setLoading(true);
     try {
       const response = await fetch('/api/descargas_exten');
       if (!response.ok) {
         throw new Error('Error al obtener las descargas de Extensión');
       }
       const data = await response.json();
-      setDescargas(data); // Actualiza el estado de las descargas con los nuevos datos
-      setFilteredDescargas(data); // Actualiza las descargas filtradas también
+      setDescargas(data);
+      setFilteredDescargas(data);
     } catch (error) {
       console.error(error);
       setError('Hubo un problema al cargar los datos.');
     } finally {
-      setLoading(false); // Finaliza el estado de carga
+      setLoading(false);
     }
   };
-  // Función para exportar los datos a Excel
   const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(filteredDescargas); // Convierte los datos a formato Excel
+    const ws = XLSX.utils.json_to_sheet(filteredDescargas);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Profesores'); // Crea un libro de trabajo con la hoja "Profesores"
-    XLSX.writeFile(wb, 'Profesores.xlsx'); // Descarga el archivo Excel
+    XLSX.utils.book_append_sheet(wb, ws, 'Profesores');
+    XLSX.writeFile(wb, 'Profesores.xlsx');
   };
 
   const handleDelete = async () => {
@@ -150,11 +147,10 @@ const DescargasEPage: React.FC = () => {
           throw new Error('Error al eliminar el registro');
         }
 
-        // Elimina la descarga de la lista local
         setDescargas((prev) => prev.filter((descarga) => descarga.id_de !== selectedDescarga.id_de));
         setFilteredDescargas((prev) => prev.filter((descarga) => descarga.id_de !== selectedDescarga.id_de));
         alert('Registro eliminado correctamente');
-        handleCloseDialog2(); // Cierra el modal
+        handleCloseDialog2();
       } catch (error) {
         console.error(error);
         setError('Hubo un problema al eliminar el registro.');
@@ -171,26 +167,22 @@ const DescargasEPage: React.FC = () => {
           </Typography>
           <Grid container spacing={2} style={{ marginTop: '16px', marginBottom: '16px' }} justifyContent="center">
             <Grid item xs={12} sm={6} style={{ display: 'flex', paddingRight: '16px', justifyContent: 'center' }}>
-              {/* Botón de Agregar */}
               <Button
                 variant="contained"
                 startIcon={<IconPlus />}
                 onClick={handleOpenDialog}
-                style={{ marginRight: '16px' }} // Espacio entre los botones
+                style={{ marginRight: '16px' }}
               >
                 Agregar
               </Button>
-
-              {/* Botón de Actualizar */}
               <Button
                 variant="contained"
                 startIcon={<IconRefresh />}
-                style={{ marginRight: '16px' }} // Espacio entre los botones
+                style={{ marginRight: '16px' }}
                 onClick={handleRefresh}
               >
                 Actualizar
               </Button>
-              {/* Botón de exportar */}
               <Button variant="contained"
                 startIcon={<IconDownload />}
                 color="primary" onClick={exportToExcel}>
@@ -229,7 +221,7 @@ const DescargasEPage: React.FC = () => {
                 variant="contained"
                 color="error"
                 sx={{ mt: 2 }}
-                onClick={handleDelete} // Llama a la función de eliminación
+                onClick={handleDelete}
               >
                 Eliminar
               </Button>
@@ -245,11 +237,10 @@ const DescargasEPage: React.FC = () => {
       {/* Modal de edición */}
       <Dialog open={openEditDialog} onClose={handleCloseEditDialog}>
         <DialogContent>
-          {/* Pasa el idDescarga y la función onClose como prop */}
           {selectedDescargaForEdit && (
             <EditarA
               idDescarga={String(selectedDescargaForEdit.id_de)}
-              onClose={handleCloseEditDialog} // Pasa la función para cerrar el modal
+              onClose={handleCloseEditDialog}
             />
           )}
         </DialogContent>
@@ -289,6 +280,7 @@ const DescargasEPage: React.FC = () => {
               <TableCell align="center"><Typography variant="h6">F. Extensión</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Porcentaje</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Ver Soporte</Typography></TableCell>
+              <TableCell align="center"><Typography variant="h6">Ver Anexo</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Editar</Typography></TableCell>
               <TableCell align="center"><Typography variant="h6">Eliminar  descarga</Typography></TableCell>
             </TableRow>
@@ -296,7 +288,7 @@ const DescargasEPage: React.FC = () => {
           <TableBody>
             {filteredDescargas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={8} align="center">
                   <Typography variant="h6" color="textSecondary">
                     No se encontraron resultados
                   </Typography>
@@ -308,8 +300,8 @@ const DescargasEPage: React.FC = () => {
                   key={descarga.id_de}
                   sx={{
                     '&:hover': {
-                      backgroundColor: '#d3d4d5', // Cambia el color de fondo al pasar el mouse
-                      cursor: 'pointer',          // Cambia el cursor a pointer
+                      backgroundColor: '#d3d4d5',
+                      cursor: 'pointer',
                     },
                   }}
                 >
@@ -327,20 +319,46 @@ const DescargasEPage: React.FC = () => {
                         variant="contained"
                         startIcon={<IconEye />}
                         onClick={() => {
-                          if (!descarga.soporte) return; // Evita errores si es null o undefined
-                          const soporteFileName = descarga.soporte; // Extrae el nombre del archivo
-                          if (!soporteFileName) return; // Si sigue vacío, no hace nada
+                          if (!descarga.soporte) return;
+                          const soporteFileName = descarga.soporte;
+                          if (!soporteFileName) return;
 
-                          // Verifica si el soporte es un archivo local o un enlace de Google Drive
                           if (soporteFileName.startsWith('file')) {
-                            // Si es un archivo local, crea la URL para acceder a él
                             const fileUrl = `http://localhost:4000/uploads/${encodeURIComponent(soporteFileName)}`;
-                            window.open(fileUrl, '_blank'); // Abre en nueva pestaña
+                            window.open(fileUrl, '_blank');
                           } else if (soporteFileName.includes('drive.google.com')) {
-                            // Si es un enlace de Google Drive, abre el enlace directamente
                             window.open(soporteFileName, '_blank');
                           } else {
-                            // En caso de que no sea ninguno de los dos, podrías manejarlo aquí
+                            alert('Tipo de archivo o enlace no soportado');
+                          }
+                        }}
+                      >
+                        Ver
+                      </Button>
+                    ) : (
+                      'No disponible'
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    {descarga.soporte2 ? (
+                      <Button
+                        style={{
+                          backgroundColor: '#1976d2',
+                          color: 'white',
+                        }}
+                        variant="contained"
+                        startIcon={<IconEye />}
+                        onClick={() => {
+                          if (!descarga.soporte2) return;
+                          const soporte2FileName = descarga.soporte2;
+                          if (!soporte2FileName) return;
+
+                          if (soporte2FileName.startsWith('file')) {
+                            const fileUrl = `http://localhost:4000/uploads/${encodeURIComponent(soporte2FileName)}`;
+                            window.open(fileUrl, '_blank');
+                          } else if (soporte2FileName.includes('drive.google.com')) {
+                            window.open(soporte2FileName, '_blank');
+                          } else {
                             alert('Tipo de archivo o enlace no soportado');
                           }
                         }}
@@ -356,7 +374,7 @@ const DescargasEPage: React.FC = () => {
                       variant="contained"
                       color="primary"
                       startIcon={<IconEdit />}
-                      onClick={() => handleOpenEditDialog(descarga)} // Acción al hacer clic en editar
+                      onClick={() => handleOpenEditDialog(descarga)}
                     >
                       Editar
                     </Button>
@@ -365,7 +383,7 @@ const DescargasEPage: React.FC = () => {
                     <Button
                       variant="contained"
                       color="error"
-                      onClick={() => handleOpenDialog2(descarga)} // Pasa el registro seleccionado
+                      onClick={() => handleOpenDialog2(descarga)}
                       startIcon={<IconTrash />}
                     >
                       Eliminar

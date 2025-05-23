@@ -91,6 +91,12 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
+    title: "Modificaciones",
+    icon: IconArrowBadgeRight,
+    href: "/principal/modificaciones",
+  },
+  {
+    id: uniqueId(),
     title: "Asignaturas",
     icon: IconArrowBadgeRight,
     href: "/principal/programacion",

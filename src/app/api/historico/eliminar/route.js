@@ -1,15 +1,18 @@
-import { pool } from '@/utils/db';  // Asegúrate de tener la conexión a la base de datos configurada
+import { pool } from '@/utils/db';
 
 export async function DELETE(req) {
   try {
     const body = await req.json();
-    const { anno, per } = body;
+    let { anno, per } = body;
 
-    if (!anno || !per) {
-      return Response.json({ success: false, message: "Faltan los parámetros 'anno' y 'per'" }, { status: 400 });
+    // Convierte a número si es posible
+    anno = Number(anno);
+    per = Number(per);
+
+    if (!anno || !per || isNaN(anno) || isNaN(per)) {
+      return Response.json({ success: false, message: "Parámetros 'anno' y 'per' inválidos" }, { status: 400 });
     }
 
-    // Realizar la consulta SQL para eliminar los datos
     await pool.query(
       `DELETE FROM historico WHERE anno = ? AND per = ?`,
       [anno, per]

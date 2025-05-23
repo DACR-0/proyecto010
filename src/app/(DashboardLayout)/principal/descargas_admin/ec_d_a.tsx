@@ -14,13 +14,15 @@ interface Row {
   id: number;
   cargo: number | null;
   porcentaje: number | null;
-  soporte: File | null;
+  soporte: File | string | null;
+  soporte2: string | null;
   enlaceDrive: string | null;
+  enlaceDrive2: string | null;
 }
 
 const ECDescargasAPage = () => {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, cargo: null, porcentaje: null, soporte: null, enlaceDrive: '' },
+    { id: 1, cargo: null, porcentaje: null, soporte: null, soporte2: '', enlaceDrive: '', enlaceDrive2: '' },
   ]);
   const [profesores, setProfesores] = useState<{ id: number; nombre: string; numero_doc: string }[]>([]);
   const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>('');
@@ -60,7 +62,10 @@ const ECDescargasAPage = () => {
 
   // Función para agregar filas
   const handleAddRow = () => {
-    setRows([...rows, { id: rows.length + 1, cargo: null, porcentaje: null, soporte: null, enlaceDrive: '' }]);
+    setRows([
+      ...rows,
+      { id: rows.length + 1, cargo: null, porcentaje: null, soporte: null, soporte2: '', enlaceDrive: '', enlaceDrive2: '' },
+    ]);
   };
 
   // Función para eliminar la última fila
@@ -72,7 +77,7 @@ const ECDescargasAPage = () => {
 
   // Validación de formulario
   const isFormValid = () => {
-    return rows.every((row) => row.cargo && (row.soporte || row.enlaceDrive)); // Verifica que haya un archivo o enlace
+    return rows.every((row) => row.cargo && (row.soporte || row.enlaceDrive));
   };
 
   // Función para finalizar
@@ -91,7 +96,10 @@ const ECDescargasAPage = () => {
       // Subir archivos y obtener sus rutas
       const rowsWithFilePaths = await Promise.all(
         rows.map(async (row) => {
-          if (row.soporte instanceof File) { // Si se sube un archivo
+          let soporteValue = row.soporte;
+          let soporte2Value = row.soporte2;
+
+          if (row.soporte instanceof File) {
             const formData = new FormData();
             formData.append('file', row.soporte);
 
@@ -106,16 +114,24 @@ const ECDescargasAPage = () => {
               }
 
               const { filePath } = await uploadResponse.json();
-              return { ...row, soporte: filePath, enlaceDrive: '' }; // Si hay archivo, guarda la ruta del archivo
+              soporteValue = filePath;
             } catch (error) {
               console.error('Error al subir archivo:', error);
               alert('Error al subir archivo: ' + (error as Error).message);
               return row;
             }
           } else if (row.enlaceDrive) {
-            return { ...row, soporte: row.enlaceDrive }; // Si hay enlace, guarda el enlace
+            soporteValue = row.enlaceDrive;
           }
-          return row;
+
+          // soporte2 toma el valor de enlaceDrive2 si existe
+          if (row.enlaceDrive2) {
+            soporte2Value = row.enlaceDrive2;
+          } else {
+            soporte2Value = '';
+          }
+
+          return { ...row, soporte: soporteValue, soporte2: soporte2Value };
         })
       );
 
@@ -137,7 +153,9 @@ const ECDescargasAPage = () => {
 
       alert('Descargas guardadas exitosamente');
       setProfesorSeleccionado('');
-      setRows([{ id: 1, cargo: null, porcentaje: null, soporte: null, enlaceDrive: '' }]);
+      setRows([
+        { id: 1, cargo: null, porcentaje: null, soporte: null, soporte2: '', enlaceDrive: '', enlaceDrive2: '' },
+      ]);
     } catch (error) {
       console.error('Error al guardar las descargas:', error);
       alert('Hubo un problema al guardar las descargas');
@@ -222,12 +240,25 @@ const ECDescargasAPage = () => {
               <TextField
                 fullWidth
                 variant="outlined"
-                label="Enlace Google Drive"
+                label="Enlace Google Drive - Soporte 1"
                 value={row.enlaceDrive ?? ''}
                 onChange={(e) => {
                   const updatedRows = [...rows];
                   updatedRows[index].enlaceDrive = e.target.value;
                   updatedRows[index].soporte = null; // Si se ingresa un enlace, se elimina el archivo
+                  setRows(updatedRows);
+                }}
+                disabled={row.soporte !== null} // Deshabilitar el campo si ya hay un archivo
+              />
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Enlace Google Drive - Soporte 2"
+                value={row.enlaceDrive2 ?? ''}
+                onChange={(e) => {
+                  const updatedRows = [...rows];
+                  updatedRows[index].enlaceDrive2 = e.target.value;
+                  updatedRows[index].soporte2 = e.target.value; // Actualiza soporte2 con el valor de enlaceDrive2
                   setRows(updatedRows);
                 }}
                 disabled={row.soporte !== null} // Deshabilitar el campo si ya hay un archivo
@@ -255,7 +286,7 @@ const ECDescargasAPage = () => {
                   }}
                 />
               </Button>
-              {row.soporte && (
+              {row.soporte && typeof row.soporte !== 'string' && (
                 <Typography variant="body2" style={{ marginTop: '8px', textAlign: 'center' }}>
                   {row.soporte.name}
                 </Typography>

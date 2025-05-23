@@ -16,13 +16,15 @@ interface Row {
   porcentaje: number | null;
   fecha_inicio: string | null;
   fecha_fin: string | null;
-  soporte: File | null;
-  googleDriveLink: string | null; // Campo para el enlace de Google Drive
+  soporte: File | string | null;
+  googleDriveLink: string | null;
+  soporte2: string | null;       // Nuevo campo para el segundo soporte
+  enlaceDrive2: string | null;   // Nuevo campo para el segundo enlace
 }
 
 const ECDescargasIPage = () => {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, cargo: null, porcentaje: null, fecha_inicio: null, fecha_fin: null, soporte: null, googleDriveLink: '' },
+    { id: 1, cargo: null, porcentaje: null, fecha_inicio: null, fecha_fin: null, soporte: null, googleDriveLink: '', soporte2: '', enlaceDrive2: '' },
   ]);
   const [profesores, setProfesores] = useState<{ id: number; nombre: string; numero_doc: string }[]>([]);
   const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>('');
@@ -59,7 +61,10 @@ const ECDescargasIPage = () => {
   }, []);
 
   const handleAddRow = () => {
-    setRows([...rows, { id: rows.length + 1, cargo: null, porcentaje: null, fecha_inicio: null, fecha_fin: null, soporte: null, googleDriveLink: '' }]);
+    setRows([
+      ...rows,
+      { id: rows.length + 1, cargo: null, porcentaje: null, fecha_inicio: null, fecha_fin: null, soporte: null, googleDriveLink: '', soporte2: '', enlaceDrive2: '' },
+    ]);
   };
 
   const handleRemoveRow = () => {
@@ -69,8 +74,9 @@ const ECDescargasIPage = () => {
   };
 
   const isFormValid = () => {
-    return rows.every((row) => row.cargo && (row.soporte || row.googleDriveLink)); // Validamos archivo o Google Drive
+    return rows.every((row) => row.cargo && (row.soporte || row.googleDriveLink));
   };
+
   const handleFinalizar = async () => {
     try {
       if (!profesorSeleccionado) {
@@ -85,6 +91,9 @@ const ECDescargasIPage = () => {
 
       const rowsWithFilePaths = await Promise.all(
         rows.map(async (row) => {
+          let soporteValue = row.soporte;
+          let soporte2Value = row.soporte2;
+
           if (row.soporte instanceof File) {
             const formData = new FormData();
             formData.append('file', row.soporte);
@@ -100,17 +109,24 @@ const ECDescargasIPage = () => {
               }
 
               const { filePath } = await uploadResponse.json();
-              return { ...row, soporte: filePath };  // Guardamos la ruta del archivo
+              soporteValue = filePath;
             } catch (error) {
               console.error('Error al subir archivo:', error);
               alert('Error al subir archivo: ' + (error as Error).message);
               return row;
             }
           } else if (row.googleDriveLink) {
-            // Si hay un enlace de Google Drive, lo guardamos tal cual
-            return { ...row, soporte: row.googleDriveLink }; // Usamos el enlace de Google Drive
+            soporteValue = row.googleDriveLink;
           }
-          return row; // Si no hay archivo ni enlace, devolvemos la fila tal cual
+
+          // soporte2 toma el valor de enlaceDrive2 si existe
+          if (row.enlaceDrive2) {
+            soporte2Value = row.enlaceDrive2;
+          } else {
+            soporte2Value = '';
+          }
+
+          return { ...row, soporte: soporteValue, soporte2: soporte2Value };
         })
       );
 
@@ -125,8 +141,8 @@ const ECDescargasIPage = () => {
             porcentaje: row.porcentaje,
             fecha_inicio: row.fecha_inicio,
             fecha_fin: row.fecha_fin,
-            soporte: row.soporte, // Enviar la ruta del archivo o el enlace de Google Drive
-            googleDriveLink: row.googleDriveLink, // También podemos enviar el enlace si es necesario, aunque ya está en `soporte`
+            soporte: row.soporte,
+            soporte2: row.soporte2, // Enviar soporte2
           })),
         }),
       });
@@ -138,13 +154,14 @@ const ECDescargasIPage = () => {
 
       alert('Descargas guardadas exitosamente');
       setProfesorSeleccionado('');
-      setRows([{ id: 1, cargo: null, porcentaje: null, fecha_inicio: null, fecha_fin: null, soporte: null, googleDriveLink: '' }]);
+      setRows([
+        { id: 1, cargo: null, porcentaje: null, fecha_inicio: null, fecha_fin: null, soporte: null, googleDriveLink: '', soporte2: '', enlaceDrive2: '' },
+      ]);
     } catch (error) {
       console.error('Error al guardar las descargas:', error);
       alert(error instanceof Error ? error.message : 'Hubo un problema al guardar las descargas');
     }
   };
-
 
   return (
     <DashboardCard title="Crear Descargas Académicas">
@@ -309,13 +326,13 @@ const ECDescargasIPage = () => {
                         if (file) {
                           const updatedRows = [...rows];
                           updatedRows[index].soporte = file;
-                          updatedRows[index].googleDriveLink = ''; // Limpiar el enlace si se selecciona un archivo
+                          updatedRows[index].googleDriveLink = '';
                           setRows(updatedRows);
                         }
                       }}
                     />
                   </Button>
-                  {row.soporte && (
+                  {row.soporte && typeof row.soporte !== 'string' && (
                     <Typography variant="body2" style={{ marginTop: '8px', textAlign: 'center' }}>
                       {row.soporte.name}
                     </Typography>
@@ -332,15 +349,29 @@ const ECDescargasIPage = () => {
                     onChange={(e) => {
                       const updatedRows = [...rows];
                       updatedRows[index].googleDriveLink = e.target.value;
-                      updatedRows[index].soporte = null; // Limpiar el archivo si se agrega un enlace
+                      updatedRows[index].soporte = null;
                       setRows(updatedRows);
                     }}
-                    disabled={row.soporte !== null} // Desactivar cuando hay un archivo
+                    disabled={row.soporte !== null}
+                  />
+                </Grid>
+                {/* Campo de enlace Google Drive 2 */}
+                <Grid item xs={12} style={{ display: 'flex', justifyContent: 'center' }}>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    label="Enlace Google Drive 2"
+                    value={row.enlaceDrive2 ?? ''}
+                    onChange={(e) => {
+                      const updatedRows = [...rows];
+                      updatedRows[index].enlaceDrive2 = e.target.value;
+                      updatedRows[index].soporte2 = e.target.value; // Actualiza soporte2 con el valor de enlaceDrive2
+                      setRows(updatedRows);
+                    }}
                   />
                 </Grid>
               </Grid>
             </Grid>
-
           </Grid>
         ))}
 

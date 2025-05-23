@@ -12,18 +12,20 @@ interface Cargo {
 
 interface Row {
   id: number;
-  cargo: number | null; // Ahora es un número (id_fe) en vez de string
+  cargo: number | null;
   porcentaje: number | null;
-  soporte: File | null;
-  enlaceDrive: string | null; // Nuevo campo para el enlace de Google Drive
+  soporte: File | string | null;
+  soporte2: string | null; // Nuevo campo para el segundo soporte
+  enlaceDrive: string | null;
+  enlaceDrive2: string | null; // Nuevo campo para el segundo enlace
 }
 
 const ECDescargasEPage = () => {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, cargo: null, porcentaje: null, soporte: null, enlaceDrive: '' },
+    { id: 1, cargo: null, porcentaje: null, soporte: null, soporte2: '', enlaceDrive: '', enlaceDrive2: '' },
   ]);
   const [profesores, setProfesores] = useState<{ id: number; nombre: string; numero_doc: string }[]>([]);
-  const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>(''); // Ahora guardará el numero_doc
+  const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>('');
   const [cargos, setCargos] = useState<Cargo[]>([]);
 
   // Cargar datos de la API de profesores
@@ -33,7 +35,7 @@ const ECDescargasEPage = () => {
         const response = await fetch('/api/profesores');
         if (!response.ok) throw new Error('Error al obtener los profesores');
         const data = await response.json();
-        setProfesores(data); // Asignar los datos obtenidos al estado
+        setProfesores(data);
       } catch (error) {
         console.error('Error al obtener los profesores:', error);
       }
@@ -49,7 +51,7 @@ const ECDescargasEPage = () => {
         const response = await fetch('/api/ec_d_e');
         if (!response.ok) throw new Error('Error al obtener los cargos');
         const data = await response.json();
-        setCargos(data); // Asignar los datos obtenidos al estado
+        setCargos(data);
       } catch (error) {
         console.error('Error al obtener los cargos:', error);
       }
@@ -60,7 +62,10 @@ const ECDescargasEPage = () => {
 
   // Función para agregar filas
   const handleAddRow = () => {
-    setRows([...rows, { id: rows.length + 1, cargo: null, porcentaje: null, soporte: null, enlaceDrive: '' }]);
+    setRows([
+      ...rows,
+      { id: rows.length + 1, cargo: null, porcentaje: null, soporte: null, soporte2: '', enlaceDrive: '', enlaceDrive2: '' },
+    ]);
   };
 
   // Función para eliminar la última fila
@@ -72,7 +77,6 @@ const ECDescargasEPage = () => {
 
   // Validación de formulario
   const isFormValid = () => {
-    // Verificar si todas las filas tienen un cargo y un archivo o enlace adjunto
     return rows.every((row) => row.cargo && (row.soporte || row.enlaceDrive));
   };
 
@@ -92,7 +96,10 @@ const ECDescargasEPage = () => {
       // Subir archivos y obtener sus rutas
       const rowsWithFilePaths = await Promise.all(
         rows.map(async (row) => {
-          if (row.soporte instanceof File) { // Validar que es un archivo
+          let soporteValue = row.soporte;
+          let soporte2Value = row.soporte2;
+
+          if (row.soporte instanceof File) {
             const formData = new FormData();
             formData.append('file', row.soporte);
 
@@ -107,20 +114,28 @@ const ECDescargasEPage = () => {
               }
 
               const { filePath } = await uploadResponse.json();
-              return { ...row, soporte: filePath, enlaceDrive: '' }; // Asegúrate de incluir el archivo
+              soporteValue = filePath;
             } catch (error) {
               console.error('Error al subir archivo:', error);
               alert('Error al subir archivo: ' + (error as Error).message);
-              return row; // Devolver la fila original sin modificar
+              return row;
             }
           } else if (row.enlaceDrive) {
-            return { ...row, soporte: row.enlaceDrive }; // Si hay enlace, guarda el enlace
+            soporteValue = row.enlaceDrive;
           }
-          return row;
+
+          // soporte2 toma el valor de enlaceDrive2 si existe
+          if (row.enlaceDrive2) {
+            soporte2Value = row.enlaceDrive2;
+          } else {
+            soporte2Value = '';
+          }
+
+          return { ...row, soporte: soporteValue, soporte2: soporte2Value };
         })
       );
 
-      // Enviar datos a la API con el porcentaje
+      // Enviar datos a la API con el porcentaje y soporte2
       const response = await fetch('/api/d_exten', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -129,8 +144,9 @@ const ECDescargasEPage = () => {
           periodo: '2025-1',
           rows: rowsWithFilePaths.map(row => ({
             cargo: row.cargo,
-            porcentaje: row.porcentaje, // Asegúrate de enviar el porcentaje
-            soporte: row.soporte
+            porcentaje: row.porcentaje,
+            soporte: row.soporte,
+            soporte2: row.soporte2 // Enviar soporte2
           })),
         }),
       });
@@ -140,12 +156,9 @@ const ECDescargasEPage = () => {
         throw new Error(errorData.message || 'Error al guardar las descargas');
       }
 
-      const result = await response.json();
       alert('Descargas guardadas exitosamente');
-
-      // Resetear el formulario
       setProfesorSeleccionado('');
-      setRows([{ id: 1, cargo: null, porcentaje: null, soporte: null, enlaceDrive: '' }]);
+      setRows([{ id: 1, cargo: null, porcentaje: null, soporte: null, soporte2: '', enlaceDrive: '', enlaceDrive2: '' }]);
     } catch (error) {
       console.error('Error al guardar las descargas:', error);
 
@@ -170,7 +183,7 @@ const ECDescargasEPage = () => {
             label="Nombre y apellido profesor"
             variant="outlined"
             value={profesorSeleccionado}
-            onChange={(e) => setProfesorSeleccionado(e.target.value)} // Ahora guarda el numero_doc
+            onChange={(e) => setProfesorSeleccionado(e.target.value)}
           >
             {profesores.map((profesor) => (
               <MenuItem key={profesor.id} value={profesor.numero_doc}>
@@ -229,11 +242,11 @@ const ECDescargasEPage = () => {
                 label="Cargo"
                 value={row.cargo ?? ''}
                 onChange={(e) => {
-                  const selectedCargoId = Number(e.target.value); // Seleccionar el id_fe
+                  const selectedCargoId = Number(e.target.value);
                   const foundCargo = cargos.find((cargo) => cargo.id_fe === selectedCargoId);
                   const updatedRows = [...rows];
-                  updatedRows[index].cargo = selectedCargoId; // Guardamos el id_fe
-                  updatedRows[index].porcentaje = null; // Establecer el porcentaje como null para que el usuario lo edite
+                  updatedRows[index].cargo = selectedCargoId;
+                  updatedRows[index].porcentaje = null;
                   setRows(updatedRows);
                 }}
               >
@@ -255,46 +268,57 @@ const ECDescargasEPage = () => {
                 value={row.porcentaje ?? ''}
                 onChange={(e) => {
                   const newValue = Number(e.target.value);
-
-                  // Aseguramos que el nuevo valor esté entre 0 y el valor máximo
                   if (newValue >= 0 && newValue <= (cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100)) {
                     const updatedRows = [...rows];
                     updatedRows[index].porcentaje = newValue;
                     setRows(updatedRows);
                   } else {
-                    // Si el valor está fuera de rango, simplemente no se hace nada
                     alert(`El porcentaje máximo de descarga permitido para este cargo es ${(cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100)}%`);
                   }
                 }}
                 inputProps={{
-                  min: 0, // Establecer mínimo permitido en 0
-                  max: cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100, // Establecer máximo permitido según el cargo
+                  min: 0,
+                  max: cargos.find(cargo => cargo.id_fe === row.cargo)?.porcentaje_max_fe ?? 100,
                 }}
               />
             </Grid>
 
             {/* Soporte */}
             <Grid item xs={4}>
-              {/* Campo para ingresar el enlace de Google Drive solo si no se ha subido un archivo */}
+              {/* Enlace Google Drive - Soporte 1 */}
               <TextField
                 fullWidth
                 variant="outlined"
-                label="Enlace Google Drive"
+                label="Enlace Google Drive - Soporte 1"
                 value={row.enlaceDrive ?? ''}
                 onChange={(e) => {
                   const updatedRows = [...rows];
                   updatedRows[index].enlaceDrive = e.target.value;
-                  updatedRows[index].soporte = null; // Si se ingresa un enlace, se elimina el archivo
+                  updatedRows[index].soporte = null;
                   setRows(updatedRows);
                 }}
-                disabled={row.soporte !== null} // Deshabilitar el campo si ya hay un archivo
+                disabled={row.soporte !== null}
+              />
+              {/* Enlace Google Drive - Soporte 2 */}
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Enlace Google Drive - Soporte 2"
+                value={row.enlaceDrive2 ?? ''}
+                onChange={(e) => {
+                  const updatedRows = [...rows];
+                  updatedRows[index].enlaceDrive2 = e.target.value;
+                  updatedRows[index].soporte2 = e.target.value; // Actualiza soporte2 con el valor de enlaceDrive2
+                  setRows(updatedRows);
+                }}
+                disabled={row.soporte !== null}
               />
               <Button
                 variant="outlined"
                 component="label"
                 fullWidth
                 style={{ textTransform: 'none', marginTop: '8px' }}
-                disabled={row.enlaceDrive !== ''} // Deshabilitar si ya hay un enlace
+                disabled={row.enlaceDrive !== ''}
               >
                 Subir Archivo
                 <input
@@ -306,13 +330,13 @@ const ECDescargasEPage = () => {
                     if (file) {
                       const updatedRows = [...rows];
                       updatedRows[index].soporte = file;
-                      updatedRows[index].enlaceDrive = ''; // Si se sube un archivo, se elimina el enlace
+                      updatedRows[index].enlaceDrive = '';
                       setRows(updatedRows);
                     }
                   }}
                 />
               </Button>
-              {row.soporte && (
+              {row.soporte && typeof row.soporte !== 'string' && (
                 <Typography variant="body2" style={{ marginTop: '8px', textAlign: 'center' }}>
                   {row.soporte.name}
                 </Typography>
