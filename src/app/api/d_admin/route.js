@@ -10,7 +10,7 @@ export async function POST(req) {
     }
 
     for (const row of rows) {
-      const { cargo, soporte, soporte2 } = row; // soporte2 agregado
+      const { cargo, soporte, soporte2 } = row;
 
       await pool.query(
         `INSERT INTO descarga_admin (id_profesor, id_fa, soporte, soporte2, periodo) VALUES (?, ?, ?, ?, ?)`,
