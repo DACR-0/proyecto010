@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from 'react';
 import { Button, CircularProgress, Typography, Box, Divider } from '@mui/material';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
