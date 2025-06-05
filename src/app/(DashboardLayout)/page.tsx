@@ -6,51 +6,68 @@ import MonthlyEarnings from '@/app/(DashboardLayout)/components/dashboard/Monthl
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import { IconClock, IconUsers } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
+import CronogramaCarousel from '@/app/(DashboardLayout)/components/cronograma/cronograma';
 
 const Dashboard = () => {
   // Estados para almacenar los datos de la API
-    const [horasCatedra, setHorasCatedra] = useState(null);
-    const [horasPlanta, setHorasPlanta] = useState(null);
-    const [horasOcasionales, setHorasOcasionales] = useState(null);
-    const [horasHonorarios, setHorasHonorarios] = useState(null);
-    const [horasTotal, setHorasTotal] = useState(null);
+  const [imagenes, setImagenes] = useState<string[]>([]);
+  const [horasCatedra, setHorasCatedra] = useState(null);
+  const [horasPlanta, setHorasPlanta] = useState(null);
+  const [horasOcasionales, setHorasOcasionales] = useState(null);
+  const [horasHonorarios, setHorasHonorarios] = useState(null);
+  const [horasTotal, setHorasTotal] = useState(null);
 
-    const [docente_catedra, setDocente_catedra] = useState(null);
-    const [docente_planta, setDocente_planta] = useState(null);
-    const [docente_ocasional, seDocente_ocasional] = useState(null);
-    const [personal_admin, setPersonal_admin] = useState(null);
-    const [pensionados, setpensionados] = useState(null);
-    const [total_docentes, setTotal_docentes] = useState(null);
-    const [s_admin, setS_admin] = useState(null);
-  
-    useEffect(() => {
-      // Función para obtener los datos de la API
-      const fetchData = async () => {
-        try {
-          const response = await fetch('/api/dashboard'); // Asegúrate de que la URL sea correcta
-          const data = await response.json();
-          
-          // Asignamos los datos a los estados correspondientes
-          setHorasCatedra(data[0].horas_catedra);
-          setHorasPlanta(data[0].horas_planta);
-          setHorasOcasionales(data[0].horas_ocasionales);
-          setHorasHonorarios(data[0].horas_honorarios);
-          setHorasTotal(data[0].horas_total);
-          setDocente_catedra(data[0].docente_catedra);
-          setDocente_planta(data[0].docente_planta);
-          seDocente_ocasional(data[0].docente_ocasional);
-          setPersonal_admin(data[0].personal_admin);
-          setpensionados(data[0].pensionados);
-          setTotal_docentes(data[0].total_docentes);
-          setS_admin(data[0].s_admin);
-          
-        } catch (error) {
-          console.error('Error al obtener los datos:', error);
-        }
-      };
-  
-      fetchData();
-    }, []); // Solo se ejecuta una vez cuando el componente se monta
+  const [docente_catedra, setDocente_catedra] = useState(null);
+  const [docente_planta, setDocente_planta] = useState(null);
+  const [docente_ocasional, seDocente_ocasional] = useState(null);
+  const [personal_admin, setPersonal_admin] = useState(null);
+  const [pensionados, setpensionados] = useState(null);
+  const [total_docentes, setTotal_docentes] = useState(null);
+  const [s_admin, setS_admin] = useState(null);
+
+  const EXPRESS_API_URL = process.env.NEXT_PUBLIC_EXPRESS_API_URL;
+
+  useEffect(() => {
+  fetch(`${EXPRESS_API_URL}/cronograma/list`)
+    .then(res => res.json())
+    .then(data => {
+      const imgs = data.map((img: string) => `${EXPRESS_API_URL}/cronograma/${img}`);
+      console.log("Imágenes cargadas:", imgs); // <-- Aquí el log
+      setImagenes(imgs);
+    })
+    .catch(err => {
+      console.error("Error al cargar imágenes del cronograma:", err); // <-- Log de error
+    });
+}, []);
+
+  useEffect(() => {
+    // Función para obtener los datos de la API
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/dashboard'); // Asegúrate de que la URL sea correcta
+        const data = await response.json();
+
+        // Asignamos los datos a los estados correspondientes
+        setHorasCatedra(data[0].horas_catedra);
+        setHorasPlanta(data[0].horas_planta);
+        setHorasOcasionales(data[0].horas_ocasionales);
+        setHorasHonorarios(data[0].horas_honorarios);
+        setHorasTotal(data[0].horas_total);
+        setDocente_catedra(data[0].docente_catedra);
+        setDocente_planta(data[0].docente_planta);
+        seDocente_ocasional(data[0].docente_ocasional);
+        setPersonal_admin(data[0].personal_admin);
+        setpensionados(data[0].pensionados);
+        setTotal_docentes(data[0].total_docentes);
+        setS_admin(data[0].s_admin);
+
+      } catch (error) {
+        console.error('Error al obtener los datos:', error);
+      }
+    };
+
+    fetchData();
+  }, []); // Solo se ejecuta una vez cuando el componente se monta
   // incluir <SalesOverview />
   return (
     <PageContainer title="Dashboard" description="this is Dashboard">
@@ -119,14 +136,14 @@ const Dashboard = () => {
         <Box>
           <Grid container spacing={3}>
             <Grid item xs={12} lg={8}>
-            <Box
-                component="img"
-                src="http://localhost:4000/cronograma/2025-1.png"
-                alt="Cronograma 2025"
-                sx={{
-                  width: '100%',
-                  height: 'auto',
-                  objectFit: 'cover',
+              <CronogramaCarousel
+                images={imagenes}
+                uploadUrl={`${EXPRESS_API_URL}/cronograma/upload`}
+                onUploadSuccess={() => {
+                  // Opcional: recargar la lista de imágenes después de subir
+                  fetch(`${EXPRESS_API_URL}/cronograma/list`)
+                    .then(res => res.json())
+                    .then(data => setImagenes(data.map((img: string) => `${EXPRESS_API_URL}/cronograma/${img}`)));
                 }}
               />
             </Grid>

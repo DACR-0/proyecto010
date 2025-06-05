@@ -60,6 +60,18 @@ const PlantillasPage = () => {
         </Button>
       </DashboardCard>
       <Divider sx={{ my: 2 }} />
+      <DashboardCard title="4. Plantilla - Disminuciones - Modificaciones">
+      <Button
+          variant="contained"
+          startIcon={<IconDownload />}
+          component="a"
+          href="http://localhost:4000/plantillas/Plantilla-Modificaciones.xlsx"
+          download
+          style={{ marginRight: '16px' }}
+        >
+          DESCARGAR
+        </Button>
+      </DashboardCard>
     </Box>
   );
 };

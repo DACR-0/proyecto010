@@ -7,7 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { IconSearch } from '@tabler/icons-react';
 
 interface Profesor {
-  docente: string; // Tipo de datos esperado
+  docente: string;
+  documento?: string; // Si tienes el número de documento en el objeto
 }
 
 interface Programacion {
@@ -24,35 +25,41 @@ interface Programacion {
 }
 
 const ProgramacionPage = () => {
-  const [profesores, setProfesores] = useState<Profesor[]>([]); // Definir el tipo de estado
-  const [programacion, setProgramacion] = useState<Programacion[]>([]); // Almacena la respuesta de la consulta
-  const [loading, setLoading] = useState(true); // Estado de carga
-  const [docenteSeleccionado, setDocenteSeleccionado] = useState<string>(''); // Almacena el docente seleccionado
+  const [profesores, setProfesores] = useState<Profesor[]>([]);
+  const [programacion, setProgramacion] = useState<Programacion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [docenteSeleccionado, setDocenteSeleccionado] = useState<string>('');
+  const [documento, setDocumento] = useState<string>(''); // Nuevo estado para el documento
 
-  // Función para obtener los datos de los profesores desde la API
   useEffect(() => {
     const fetchProfesores = async () => {
       try {
-        const response = await fetch('/api/historico/consulta_docente/nombres'); // Asegúrate de que esta URL sea correcta
+        const response = await fetch('/api/historico/consulta_docente/nombres');
         const data = await response.json();
-        setProfesores(data); // Establece los profesores en el estado
+        setProfesores(data);
       } catch (error) {
         console.error('Error al obtener los profesores:', error);
       } finally {
-        setLoading(false); // Finaliza la carga
+        setLoading(false);
       }
     };
 
-    fetchProfesores(); // Llama a la función para obtener los datos
-  }, []); // Se ejecuta una sola vez cuando el componente se monta
+    fetchProfesores();
+  }, []);
 
   const handleBuscar = async () => {
-    if (!docenteSeleccionado) return; // No hacer nada si no hay docente seleccionado
+    if (!docenteSeleccionado && !documento) return;
     setLoading(true);
     try {
-      const response = await fetch(`/api/historico/consulta_docente?docente=${docenteSeleccionado}`);
+      let url = '';
+      if (documento) {
+        url = `/api/historico/consulta_docente?documento=${documento}`;
+      } else {
+        url = `/api/historico/consulta_docente?docente=${docenteSeleccionado}`;
+      }
+      const response = await fetch(url);
       const data = await response.json();
-      setProgramacion(data); // Establece los datos de la programación en el estado
+      setProgramacion(data);
     } catch (error) {
       console.error('Error al obtener los datos de la programación:', error);
     } finally {
@@ -61,26 +68,50 @@ const ProgramacionPage = () => {
   };
 
   if (loading) {
-    return <Typography>Cargando...</Typography>; // Muestra un mensaje mientras se cargan los datos
+    return <Typography>Cargando...</Typography>;
   }
 
   return (
     <PageContainer title="ProgramacionPage" description="Contiene las asignaturas asignadas a docentes">
       <DashboardCard title="Programacion Académica Docentes">
-        <Box display="flex" alignItems="center" gap={2}> {/* Usamos 'Box' con flexbox */}
+        <Box display="flex" alignItems="center" gap={2}>
           <Autocomplete
             disablePortal
-            options={profesores} // Pasamos el arreglo completo de profesores
-            getOptionLabel={(option) => option.docente} // Usamos la propiedad 'docente' para mostrar
+            options={profesores}
+            getOptionLabel={(option) => option?.docente ? String(option.docente) : ""}
             sx={{ width: 400 }}
-            onChange={(event, value) => setDocenteSeleccionado(value ? value.docente : '')}
-            renderInput={(params) => <TextField {...params} label="Nombre y Apellido Docente" />}
+            onChange={(event, value) => {
+              setDocenteSeleccionado(value ? value.docente : '');
+              setDocumento(''); // Limpiar documento si selecciona nombre
+            }}
+            value={docenteSeleccionado ? { docente: docenteSeleccionado } : null}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Nombre y Apellido Docente"
+                disabled={!!documento}
+              />
+            )}
+            isOptionEqualToValue={(option, value) => option.docente === value.docente}
           />
+          {!docenteSeleccionado && (
+            <TextField
+              label="Número de documento"
+              value={documento}
+              onChange={(e) => {
+                setDocumento(e.target.value);
+                if (e.target.value) setDocenteSeleccionado('');
+              }}
+              sx={{ width: 250 }}
+              type="number"
+              disabled={!!docenteSeleccionado}
+            />
+          )}
           <Button
             variant="contained"
             startIcon={<IconSearch />}
-            onClick={handleBuscar} // Llama a la función handleBuscar
-            style={{ marginRight: '16px' }} // Espacio entre los botones
+            onClick={handleBuscar}
+            style={{ marginRight: '16px' }}
           >
             Buscar
           </Button>
@@ -88,7 +119,6 @@ const ProgramacionPage = () => {
       </DashboardCard>
       <Divider sx={{ my: 2 }} />
 
-      {/* Mostrar la tabla con la programación si existen datos */}
       {programacion.length > 0 ? (
         <TableContainer component={Paper}>
           <Table>
@@ -125,7 +155,6 @@ const ProgramacionPage = () => {
       ) : (
         <Typography>No hay datos disponibles</Typography>
       )}
-
     </PageContainer>
   );
 };

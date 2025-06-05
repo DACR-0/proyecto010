@@ -15,7 +15,7 @@ const DescargasAPage = () => {
       setFile(e.target.files[0]);
     }
   };
-
+  const EXPRESS_API_URL = process.env.NEXT_PUBLIC_EXPRESS_API_URL;
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
@@ -33,7 +33,7 @@ const DescargasAPage = () => {
 
     try {
       // Enviar el archivo al servidor Express para procesarlo
-      const response = await fetch('http://localhost:4000/historicojson', {
+      const response = await fetch(`${EXPRESS_API_URL}/historicojson`, {
         method: 'POST',
         body: formData,
       });
