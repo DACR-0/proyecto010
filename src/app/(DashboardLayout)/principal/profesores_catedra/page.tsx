@@ -78,7 +78,7 @@ const ProfesorescPage: React.FC = () => {
         <Grid item xs={12} sm={10}>
           <TextField
             fullWidth
-            label="Buscar por nombre, programa o documento"
+            label="Buscar por nombre, facultad o documento"
             variant="outlined"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

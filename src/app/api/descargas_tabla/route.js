@@ -2,7 +2,8 @@ import { pool } from '@/utils/db';
 
 export async function GET(request) {
   try {
-    const [rows] = await pool.query(`SELECT 
+    const [rows] = await pool.query(`
+        SELECT 
     profesores.nombre, 
     profesores.dedicacion,
     porcentajes.id_profesor, 
@@ -56,16 +57,19 @@ JOIN (
         (SELECT da.id_profesor, SUM(fa.porcentaje) AS total_porcentaje 
          FROM descarga_admin da
          JOIN f_administrativas fa ON da.id_fa = fa.id_fa
+         where da.periodo = (SELECT periodo FROM proyecto010.periodos where año=(SELECT MAX(año) FROM periodos) and semestre=(SELECT semestre FROM periodos WHERE año = ( SELECT MAX(año) FROM periodos) ORDER BY semestre DESC LIMIT 1))
          GROUP BY da.id_profesor) AS admin 
     ON admin.id_profesor = profesores.id_profesor
     LEFT JOIN 
         (SELECT de.id_profesor, SUM(de.porcentaje) AS total_porcentaje 
          FROM descarga_extencion de
+         where de.periodo = (SELECT periodo FROM proyecto010.periodos where año=(SELECT MAX(año) FROM periodos) and semestre=(SELECT semestre FROM periodos WHERE año = ( SELECT MAX(año) FROM periodos) ORDER BY semestre DESC LIMIT 1))
          GROUP BY de.id_profesor) AS exten 
     ON exten.id_profesor = profesores.id_profesor
     LEFT JOIN 
         (SELECT di.id_profesor, SUM(di.porcentaje) AS total_porcentaje 
          FROM descarga_investigacion di
+         where di.periodo = (SELECT periodo FROM proyecto010.periodos where año=(SELECT MAX(año) FROM periodos) and semestre=(SELECT semestre FROM periodos WHERE año = ( SELECT MAX(año) FROM periodos) ORDER BY semestre DESC LIMIT 1))
          GROUP BY di.id_profesor) AS inve
     ON inve.id_profesor = profesores.id_profesor
 ) AS porcentajes 

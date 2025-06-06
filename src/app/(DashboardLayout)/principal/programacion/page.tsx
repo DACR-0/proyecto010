@@ -5,10 +5,11 @@ import PageContainer from '@/app/(DashboardLayout)/components/container/PageCont
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import React, { useState, useEffect } from 'react';
 import { IconSearch } from '@tabler/icons-react';
+import * as XLSX from 'xlsx';
 
 interface Profesor {
   docente: string;
-  documento?: string; // Si tienes el número de documento en el objeto
+  documento?: string;
 }
 
 interface Programacion {
@@ -29,7 +30,7 @@ const ProgramacionPage = () => {
   const [programacion, setProgramacion] = useState<Programacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [docenteSeleccionado, setDocenteSeleccionado] = useState<string>('');
-  const [documento, setDocumento] = useState<string>(''); // Nuevo estado para el documento
+  const [documento, setDocumento] = useState<string>('');
 
   useEffect(() => {
     const fetchProfesores = async () => {
@@ -67,6 +68,28 @@ const ProgramacionPage = () => {
     }
   };
 
+  // Función para exportar a Excel
+  const exportToExcel = () => {
+    if (programacion.length === 0) return;
+
+    const exportData = programacion.map(item => ({
+      'Programa': item.Pograma,
+      'Materia': item.Cod_Materia,
+      'Curso': item.Curso,
+      'Grupo': item.grupo,
+      'Semestre': item.semestre,
+      'Horas': item.horas,
+      'Tipo Hora': item.tipo_hora,
+      'Año': item.anno,
+      'Periodo': item.per,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Programacion');
+    XLSX.writeFile(wb, 'programacion_docente.xlsx');
+  };
+
   if (loading) {
     return <Typography>Cargando...</Typography>;
   }
@@ -82,7 +105,7 @@ const ProgramacionPage = () => {
             sx={{ width: 400 }}
             onChange={(event, value) => {
               setDocenteSeleccionado(value ? value.docente : '');
-              setDocumento(''); // Limpiar documento si selecciona nombre
+              setDocumento('');
             }}
             value={docenteSeleccionado ? { docente: docenteSeleccionado } : null}
             renderInput={(params) => (
@@ -114,6 +137,15 @@ const ProgramacionPage = () => {
             style={{ marginRight: '16px' }}
           >
             Buscar
+          </Button>
+          <Button
+            variant="contained" // Cambia a "contained" para igualar el estilo
+            color="primary"     // Igual que el de buscar
+            onClick={exportToExcel}
+            disabled={programacion.length === 0}
+            style={{ marginRight: '16px' }} // Opcional, para igualar separación
+          >
+            Exportar
           </Button>
         </Box>
       </DashboardCard>

@@ -6,7 +6,8 @@ export async function GET(request) {
 p.nombre AS nombre_profesor, fe.nombre_fe, de.porcentaje, de.soporte AS soporte, de.soporte2 AS soporte2
 FROM proyecto010.descarga_extencion de
 JOIN proyecto010.profesores p ON de.id_profesor = p.numero_doc
-JOIN proyecto010.f_extencion fe ON de.id_fe = fe.id_fe;`);
+JOIN proyecto010.f_extencion fe ON de.id_fe = fe.id_fe
+where de.periodo = (SELECT periodo FROM proyecto010.periodos where año=(SELECT MAX(año) FROM periodos) and semestre=(SELECT semestre FROM periodos WHERE año = ( SELECT MAX(año) FROM periodos) ORDER BY semestre DESC LIMIT 1));`);
     return new Response(JSON.stringify(rows), { status: 200 });
   } catch (error) {
     console.error('Ocurrio un error', error);
