@@ -76,7 +76,7 @@ const DescargasAPage = () => {
   return (
     <DashboardCard title="Cargar Plantilla - Descargas academicas">
       <div>
-      <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 2 }} />
 
         <Box
           sx={{
@@ -107,17 +107,19 @@ const DescargasAPage = () => {
           </form>
 
           {error && <Typography color="error" align="center">{error}</Typography>}
-          {success && <Typography color="primary" align="center">Archivo subido exitosamente!</Typography>}
+          {success && !error && <Typography color="primary" align="center">Archivo subido exitosamente!</Typography>}
 
           {/* Mostrar la respuesta del servidor si está disponible */}
-          {serverResponse && (
-            <Box mt={2}>
-              <Typography variant="h6" align="center">
-                Respuesta del Servidor (Datos Procesados):
-              </Typography>
-              <pre>{JSON.stringify(serverResponse, null, 2)}</pre> {/* Formato bonito para la respuesta */}
-            </Box>
-          )}
+          {/*
+{serverResponse && (
+  <Box mt={2}>
+    <Typography variant="h6" align="center">
+      Respuesta del Servidor (Datos Procesados):
+    </Typography>
+    <pre>{JSON.stringify(serverResponse, null, 2)}</pre>
+  </Box>
+)}
+*/}
         </Box>
       </div>
     </DashboardCard>

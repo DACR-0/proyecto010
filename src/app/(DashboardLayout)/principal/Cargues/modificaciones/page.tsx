@@ -107,7 +107,7 @@ const MODPage = () => {
           </form>
 
           {error && <Typography color="error" align="center">{error}</Typography>}
-          {success && <Typography color="primary" align="center">Archivo subido exitosamente!</Typography>}
+          {success && !error && <Typography color="primary" align="center">Archivo subido exitosamente!</Typography>}
 
           {/* Mostrar la respuesta del servidor si está disponible */}
           {serverResponse && (

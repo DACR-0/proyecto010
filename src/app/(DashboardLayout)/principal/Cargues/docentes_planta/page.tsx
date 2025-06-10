@@ -107,17 +107,10 @@ const CdocentePage = () => {
           </form>
 
           {error && <Typography color="error" align="center">{error}</Typography>}
-          {success && <Typography color="primary" align="center">Archivo subido exitosamente!</Typography>}
+          {success && !error && <Typography color="primary" align="center">Archivo subido exitosamente!</Typography>}
 
           {/* Mostrar la respuesta del servidor si está disponible */}
-          {serverResponse && (
-            <Box mt={2}>
-              <Typography variant="h6" align="center">
-                Respuesta del Servidor (Datos Procesados):
-              </Typography>
-              <pre>{JSON.stringify(serverResponse, null, 2)}</pre> {/* Formato bonito para la respuesta */}
-            </Box>
-          )}
+          
         </Box>
       </div>
     </DashboardCard>

@@ -12,6 +12,7 @@ import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCa
 import BlankCard from '@/app/(DashboardLayout)/components/shared/BlankCard';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 
+const EXPRESS_API_URL = process.env.NEXT_PUBLIC_EXPRESS_API_URL;
 
 const PlantillasPage = () => {
 
@@ -22,7 +23,7 @@ const PlantillasPage = () => {
           variant="contained"
           startIcon={<IconDownload />}
           component="a"
-          href="http://localhost:4000/plantillas/Plantilla-Docentes.xlsx"
+          href={`${EXPRESS_API_URL}/plantillas/Plantilla-Docentes.xlsx`}
           download
           style={{ marginRight: '16px' }}
         >
@@ -33,11 +34,11 @@ const PlantillasPage = () => {
       <Divider sx={{ my: 2 }} />
 
       <DashboardCard title="2. Plantilla - Descargas academicas">
-      <Button
+        <Button
           variant="contained"
           startIcon={<IconDownload />}
           component="a"
-          href="http://localhost:4000/plantillas/Plantilla-Descargas-academicas.xlsx"
+          href={`${EXPRESS_API_URL}/plantillas/Plantilla-Descargas-academicas.xlsx`}
           download
           style={{ marginRight: '16px' }}
         >
@@ -48,11 +49,11 @@ const PlantillasPage = () => {
       <Divider sx={{ my: 2 }} />
 
       <DashboardCard title="3. Plantilla - Base programacion academica">
-      <Button
+        <Button
           variant="contained"
           startIcon={<IconDownload />}
           component="a"
-          href="http://localhost:4000/plantillas/Plantilla-Base-programacion-academica.xlsx"
+          href={`${EXPRESS_API_URL}/plantillas/Plantilla-Base-programacion-academica.xlsx`}
           download
           style={{ marginRight: '16px' }}
         >
@@ -61,11 +62,11 @@ const PlantillasPage = () => {
       </DashboardCard>
       <Divider sx={{ my: 2 }} />
       <DashboardCard title="4. Plantilla - Disminuciones - Modificaciones">
-      <Button
+        <Button
           variant="contained"
           startIcon={<IconDownload />}
           component="a"
-          href="http://localhost:4000/plantillas/Plantilla-Modificaciones.xlsx"
+          href={`${EXPRESS_API_URL}/plantillas/Plantilla-Modificaciones.xlsx`}
           download
           style={{ marginRight: '16px' }}
         >
@@ -77,4 +78,3 @@ const PlantillasPage = () => {
 };
 
 export default PlantillasPage;
-
