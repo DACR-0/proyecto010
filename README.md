@@ -16,11 +16,14 @@ Aplicación web para la gestión de programación académica.
    
 2. Instala dependencias:
 
-    <pre> npm install </pre>
+    ```sh
+     npm install
+     ```
  
  3. Configura el archivo `.env`:
 
-   <pre>
+  
+   ```sh
       NEXTAUTH_SECRET=clave
       NEXTAUTH_URL=http://localhost:0000         # URL de tu aplicación Next.js
       NEXT_PUBLIC_EXPRESS_API_URL=http://localhost:0000 # URL de tu API Express
@@ -28,18 +31,19 @@ Aplicación web para la gestión de programación académica.
       DB_USER=xxx                                # Usuario de la base de datos
       DB_PASSWORD=xxx                            # Contraseña de la base de datos
       DB_NAME=xxx                                # Nombre de la base de datos
-  </pre>
+  ```
+   
 
  4. Inicia el backend y frontend:
     
     Para el backend (Express):
-    <pre>
+    ```sh
       npm start
-    </pre>
+    ```
     Para el frontend (Next.js):
-    <pre>
+    ```sh
       npm run dev
-    </pre>
+    ```
     
  6. Accede a la aplicación:
     Abre tu navegador en http://localhost:3000 (o la URL que configuraste).
