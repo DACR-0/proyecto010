@@ -42,6 +42,12 @@ const Menuitems = [
     href: "/principal/profesores_catedra",
   },
   {
+    id: uniqueId(),
+    title: "Resoluciones",
+    icon: IconArrowBadgeRight,
+    href: "/principal/resoluciones",
+  },
+  {
     navlabel: true,
     subheader: "DESCARGAS ACADEMICAS",
   },

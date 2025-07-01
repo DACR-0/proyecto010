@@ -131,7 +131,7 @@ const ProfesoresPage: React.FC = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <IconSearch/>
+                  <IconSearch />
                 </InputAdornment>
               ),
             }}
