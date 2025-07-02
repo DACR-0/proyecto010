@@ -17,14 +17,16 @@ import {
   Grid,
   CircularProgress,
 } from '@mui/material';
-import { IconSearch, IconPlus, IconDownload } from '@tabler/icons-react';
+import { IconSearch, IconPlus, IconDownload, IconTrash, IconEye } from '@tabler/icons-react';
 import ModalResolucion from './modalResolucion';
+import * as XLSX from 'xlsx';
 
 interface Resolucion {
   idresolucion: number;
   nombre: string;
   archivo: string | null;
   programa: string | null;
+  viabilidades?: string | null; // <-- Añadido
 }
 
 const fetchResoluciones = async (): Promise<Resolucion[]> => {
@@ -41,7 +43,7 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
 
   // Cargar resoluciones al montar
-  useEffect(() => {
+  const cargarResoluciones = () => {
     setLoading(true);
     fetchResoluciones()
       .then(data => {
@@ -50,34 +52,64 @@ const Page = () => {
       })
       .catch(() => setResoluciones([]))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    cargarResoluciones();
   }, []);
 
-  // Filtrar resoluciones
+  // Filtrar resoluciones (incluye viabilidades)
   useEffect(() => {
     const s = search.toLowerCase();
     setFiltered(
       resoluciones.filter(
         r =>
           r.nombre.toLowerCase().includes(s) ||
-          (r.programa ?? '').toLowerCase().includes(s)
+          (r.programa ?? '').toLowerCase().includes(s) ||
+          (r.viabilidades ?? '').toLowerCase().includes(s)
       )
     );
   }, [search, resoluciones]);
 
-  // Guardar nueva resolución (simulado, deberías hacer POST a tu API)
-  const handleSaveResolucion = (data: any) => {
+  // Guardar nueva resolución: solo recarga la lista después del guardado
+  const handleSaveResolucion = () => {
     setOpenModal(false);
-    // Aquí deberías hacer POST a tu API y recargar la lista
-    // Simulación:
-    setResoluciones(prev => [
-      ...prev,
-      {
-        idresolucion: prev.length + 1,
-        nombre: data.nombreResolucion,
-        archivo: data.enlaceArchivo,
-        programa: data.programa,
-      },
-    ]);
+    cargarResoluciones();
+  };
+
+  // Eliminar resolución
+  const handleDelete = async (idresolucion: number) => {
+    if (!window.confirm('¿Está seguro de eliminar esta resolución?')) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/resoluciones?id=${idresolucion}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.error || 'Error al eliminar');
+      }
+    } catch (e) {
+      alert('Error de red al eliminar');
+    } finally {
+      cargarResoluciones();
+    }
+  };
+
+  // Exportar a Excel (incluye viabilidades)
+  const handleExport = () => {
+    const data = filtered.map(res => ({
+      'ID': res.idresolucion,
+      'Nombre/Código': res.nombre,
+      'Programa': res.programa ?? '',
+      'Viabilidades': res.viabilidades ?? '',
+      'Archivo': res.archivo ?? '',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Resoluciones');
+    XLSX.writeFile(workbook, 'resoluciones.xlsx');
   };
 
   return (
@@ -89,7 +121,7 @@ const Page = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            placeholder="Buscar por nombre, código o programa"
+            placeholder="Buscar por nombre, código, programa o viabilidad"
             value={search}
             onChange={e => setSearch(e.target.value)}
             InputProps={{
@@ -102,6 +134,15 @@ const Page = () => {
           />
         </Grid>
         <Grid item xs={12} md={6} sx={{ textAlign: { xs: 'left', md: 'right' } }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<IconDownload />}
+            onClick={handleExport}
+            sx={{ mr: 1 }}
+          >
+            Exportar
+          </Button>
           <Button
             variant="contained"
             color="primary"
@@ -124,13 +165,15 @@ const Page = () => {
               <TableRow>
                 <TableCell>Nombre/Código</TableCell>
                 <TableCell>Programa</TableCell>
+                <TableCell>Viabilidades</TableCell>
                 <TableCell>Archivo</TableCell>
+                <TableCell align="center">Eliminar</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} align="center">
+                  <TableCell colSpan={5} align="center">
                     No hay resoluciones para mostrar.
                   </TableCell>
                 </TableRow>
@@ -140,23 +183,38 @@ const Page = () => {
                     <TableCell>{res.nombre}</TableCell>
                     <TableCell>{res.programa ?? '-'}</TableCell>
                     <TableCell>
+                      {res.viabilidades
+                        ? res.viabilidades
+                        : <Typography color="text.secondary" variant="body2">-</Typography>}
+                    </TableCell>
+                    <TableCell>
                       {res.archivo ? (
                         <Button
-                          variant="outlined"
+                          variant="contained"
                           color="primary"
-                          size="small"
-                          startIcon={<IconDownload />}
+                          style={{ marginRight: 8 }}
+                          startIcon={<IconEye />}
                           href={res.archivo}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          Ver archivo
+                          Ver
                         </Button>
                       ) : (
                         <Typography color="text.secondary" variant="body2">
                           No hay resolución adjunta
                         </Typography>
                       )}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button
+                        variant="contained"
+                        color="error"
+                        onClick={() => handleDelete(res.idresolucion)}
+                        startIcon={<IconTrash />}
+                      >
+                        Eliminar
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -168,7 +226,10 @@ const Page = () => {
 
       <ModalResolucion
         open={openModal}
-        onClose={() => setOpenModal(false)}
+        onClose={() => {
+          setOpenModal(false);
+          cargarResoluciones();
+        }}
         onSave={handleSaveResolucion}
       />
     </Box>

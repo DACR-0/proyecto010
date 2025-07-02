@@ -3,7 +3,8 @@ import { pool } from '@/utils/db';
 export async function GET(req) {
   try {
     const [rows] = await pool.query(
-         ` SELECT h.Programa
+         `
+         SELECT h.Pograma
 FROM historico h
 WHERE anno = (
         SELECT MAX(año)
@@ -17,7 +18,9 @@ WHERE anno = (
         LIMIT 1
     )
     AND TRIM(tipo_docente) != 'Planta'
-GROUP BY h.Pograma;`
+GROUP BY h.Pograma
+order by h.Pograma;
+         `
      );
     return new Response(JSON.stringify(rows), { status: 200 });
   } catch (error) {

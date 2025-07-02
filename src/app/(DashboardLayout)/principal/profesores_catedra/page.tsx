@@ -10,9 +10,10 @@ interface Profesor {
   docente: string;
   total_horas: string;
   factultad_adscripcion: string;
+  viabilidades: string;
 }
 
-const ProfesorescPage: React.FC = () => {
+const ProfesoresCatedraPage: React.FC = () => {
   const [profesores, setProfesores] = useState<Profesor[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +112,7 @@ const ProfesorescPage: React.FC = () => {
               <TableCell><h2>Documento</h2></TableCell>
               <TableCell><h2>Nombre</h2></TableCell>
               <TableCell><h2>Horas dedicación</h2></TableCell>
+              <TableCell><h2>Viabilidad</h2></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -128,6 +130,7 @@ const ProfesorescPage: React.FC = () => {
                 <TableCell>{profesor.identificacion}</TableCell>
                 <TableCell>{profesor.docente}</TableCell>
                 <TableCell>{profesor.total_horas}</TableCell>
+                <TableCell>{profesor.viabilidades}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -137,4 +140,4 @@ const ProfesorescPage: React.FC = () => {
   );
 };
 
-export default ProfesorescPage;
+export default ProfesoresCatedraPage;
